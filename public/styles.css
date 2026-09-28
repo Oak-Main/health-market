@@ -163,3 +163,31 @@ footer p { max-width: 46rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Open Enrollment key-dates panel (2026-09-28 kit). Reuses the card language. */
+.status-note {
+  color: var(--muted);
+  max-width: var(--measure);
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+
+.oe-panel {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.25rem 1rem;
+  max-width: var(--measure);
+  margin: 0 0 1rem;
+}
+
+.oe-panel h2 { margin: 0 0 0.75rem; }
+
+.oe-line { margin: 0 0 0.5rem; }
+
+.oe-note {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin: 0;
+}

@@ -1,0 +1,11 @@
+{
+  "planYear": 2027,
+  "window": { "starts": "2026-11-01", "ends": "2027-01-15" },
+  "januaryCoverageDeadline": "2026-12-15",
+  "operator": "HealthCare.gov (federally run Marketplace)",
+  "asOf": "2026-09-28",
+  "primarySource": "https://www.healthcare.gov/quick-guide/dates-and-deadlines",
+  "ruleStatus": "The 2027 Payment Notice rule that would shorten this window to December 15 has been enjoined by a federal court and the window stands at November 1 through January 15; an appeal is live, so the dates can change.",
+  "stateNote": "State-based Marketplaces set their own enrollment dates, which can differ from HealthCare.gov.",
+  "nextReview": "2026-10-15"
+}

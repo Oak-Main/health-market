@@ -19,7 +19,9 @@
     "test:watch": "vitest",
     "etl": "tsx src/etl/run.ts",
     "etl:verify": "tsx src/etl/verify.ts",
-    "dev:engine": "tsx src/dev-server.ts"
+    "dev:engine": "tsx src/dev-server.ts",
+    "check:security-floor": "node scripts/check-security-floor.mjs",
+    "smoke:production": "node scripts/smoke-production.mjs"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
@@ -38,7 +40,7 @@
     "fflate": "^0.8.3",
     "lucide-react": "^1.27.0",
     "motion": "^12.42.2",
-    "next": "^16.3.6",
+    "next": "^16.4.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "recharts": "^3.10.1",

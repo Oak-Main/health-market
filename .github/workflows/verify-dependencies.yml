@@ -1,0 +1,33 @@
+name: Verify dependencies
+on:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: verify-dependencies-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install exactly the committed lockfile
+        run: npm ci
+      - name: Verify installed dependency security floors
+        run: npm run check:security-floor
+      - name: Typecheck application
+        run: npm run typecheck
+      - name: Typecheck subsidy engine
+        run: npm run engine:typecheck
+      - name: Run existing engine and application tests
+        run: npm test
+      - name: Build application
+        run: npm run build

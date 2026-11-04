@@ -133,10 +133,31 @@ describe("federal poverty line", () => {
     expect(cliffIncomeFor(PY26, 4, "contiguous")).toBe(USD(128_600));
   });
 
-  it("refuses to compute for Alaska and Hawaii while their tables are unverified", () => {
-    // Returning a confidently wrong number is worse than returning an error.
-    expect(() => fplAmount(PY27, 1, "alaska")).toThrow(UnverifiedDataError);
-    expect(() => fplAmount(PY27, 1, "hawaii")).toThrow(UnverifiedDataError);
+  it("serves Alaska and Hawaii from their own verified 2026 tables", () => {
+    // 91 FR 1797-1798 (FR Doc. 2026-00755), read 2026-11-04. Alaska $19,950
+    // base and +$7,100 per person; Hawaii $18,360 base and +$6,530 per person.
+    // These regions were zeroed placeholders until that pass.
+    expect(fplAmount(PY27, 1, "alaska")).toBe(USD(19_950));
+    expect(fplAmount(PY27, 2, "alaska")).toBe(USD(27_050));
+    expect(fplAmount(PY27, 4, "alaska")).toBe(USD(41_250));
+    expect(fplAmount(PY27, 1, "hawaii")).toBe(USD(18_360));
+    expect(fplAmount(PY27, 2, "hawaii")).toBe(USD(24_890));
+    expect(fplAmount(PY27, 4, "hawaii")).toBe(USD(37_950));
+  });
+
+  it("still refuses a region whose table has not been verified", () => {
+    // Every region currently verifies, so the runtime guard is exercised with
+    // a deliberately unverified copy. Returning a confidently wrong number is
+    // worse than returning an error.
+    const unverified = {
+      ...PY27,
+      povertyGuidelines: {
+        ...PY27.povertyGuidelines,
+        base: { ...PY27.povertyGuidelines.base, alaska: 0 },
+        increment: { ...PY27.povertyGuidelines.increment, alaska: 0 },
+      },
+    };
+    expect(() => fplAmount(unverified, 1, "alaska")).toThrow(UnverifiedDataError);
   });
 
   it("rejects invalid household sizes", () => {
@@ -520,8 +541,22 @@ describe("plan year parameters", () => {
     for (const py of [PY26, PY27]) {
       expect(py.povertyGuidelines.provenance.url).toMatch(/^https:\/\//);
       expect(py.applicablePercentageTable.provenance.url).toMatch(/^https:\/\//);
-      expect(py.applicablePercentageTable.provenance.checked).toBe("2026-07-27");
+      expect(py.povertyGuidelines.provenance.checked).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(py.applicablePercentageTable.provenance.checked).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
+  });
+
+  it("stamps each source with the date it was actually last read", () => {
+    // A stamp moves only when the source was re-read from its primary
+    // document. The 2026 sources were re-read on 2026-11-04; the 2025
+    // sources were not, so they keep their earlier stamp.
+    expect(PY27.povertyGuidelines.provenance.checked).toBe("2026-11-04");
+    expect(PY27.applicablePercentageTable.provenance.checked).toBe("2026-11-04");
+    expect(PY26.povertyGuidelines.provenance.checked).toBe("2026-07-27");
+    expect(PY26.applicablePercentageTable.provenance.checked).toBe("2026-07-27");
+    // The 2027 sources are now primary-verified rather than corroborated.
+    expect(PY27.povertyGuidelines.provenance.status).toBe("primary-verified");
+    expect(PY27.applicablePercentageTable.provenance.status).toBe("primary-verified");
   });
 });
 

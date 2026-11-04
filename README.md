@@ -11,10 +11,13 @@ Background and the GO/NO-GO analysis that produced this design:
 
 ---
 
-## State of the law (as of 2026-07-27)
+## State of the law (as of 2026-11-04)
 
 The ARPA/IRA **enhanced premium tax credits lapsed on 2025-12-31 and were not
-extended.** The pre-ARPA §36B schedule governs plan years 2026 and 2027, which means:
+extended.** Re-checked against Congress.gov on 2026-11-04: the House-passed
+3-year extension (H.R. 1834) is still sitting on the Senate calendar and
+H.R. 5145 is still "Introduced" — no extension has become law. The pre-ARPA
+§36B schedule governs plan years 2026 and 2027, which means:
 
 - A hard eligibility **cliff at 400% FPL** — one cent over and the credit is `$0`,
   not a reduced amount.

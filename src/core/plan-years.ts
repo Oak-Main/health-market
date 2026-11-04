@@ -4,7 +4,7 @@
  * This file is the single place a legislative or regulatory change lands.
  * The engine in ptc.ts / cliff.ts contains no year-specific constants.
  *
- * STATE OF THE LAW AS OF 2026-07-27
+ * STATE OF THE LAW AS OF 2026-11-04
  * ---------------------------------
  * The ARPA §9661/§9663 enhanced premium tax credits, extended by IRA §12001,
  * LAPSED on 2025-12-31. Congress did not extend them:
@@ -15,6 +15,29 @@
  *                 applicable percentage table for 2027 topping out at 400% FPL.
  *                 Treasury does not index a table that statute has displaced;
  *                 this is the dispositive administrative signal.
+ *   - 2026-10-30  The Fourth Circuit heard argument in the government's appeal
+ *                 of the OE-window vacatur (No. 26-1938); no decision as of the
+ *                 date below.
+ *
+ * 2026-11-04 RE-CHECK — WHAT CHANGED AND WHAT DID NOT
+ * ---------------------------------------------------
+ * Re-read from primary sources on 2026-11-04:
+ *   - IRS Rev. Proc. 2026-26 §§3.01-3.02 (primary PDF): the 2027 applicable
+ *     percentage table is unchanged, 2.15%..10.22%, final bracket "at least
+ *     300% but not more than 400%". Required contribution percentage 10.22%.
+ *   - 91 FR 1797-1798 (FR Doc. 2026-00755): the 2026 HHS poverty guidelines
+ *     are now read for ALL THREE regions. Alaska and Hawaii are no longer
+ *     zeroed placeholders.
+ *   - Congress.gov: H.R. 1834 (the House-passed 3-year extension) still sits
+ *     on the Senate calendar with no floor action; H.R. 5145 is still
+ *     "Introduced" with its only action being referral to Ways and Means.
+ *     No extension has become law.
+ *
+ * So the underlying facts did NOT move: the enhanced credits are still lapsed
+ * and the 400% cliff is still live for PY2026 and PY2027. What changed is the
+ * confidence in the parameters behind that finding — the 2027 table and the
+ * 2026 poverty guidelines are now primary-verified rather than derived or
+ * secondary-sourced.
  *
  * Therefore `enhancedCreditsActive: false` and the 400% cliff is live for both
  * PY2026 and PY2027.
@@ -27,7 +50,16 @@ import type {
   PovertyGuidelines,
 } from "./types";
 
-const CHECKED = "2026-07-27";
+/**
+ * Verification stamps, one per source.
+ *
+ * A stamp moves only when the source was actually re-read from its primary
+ * document on that date — never because the file was edited. The 2025
+ * guidelines and the 2026 applicable percentage table were NOT re-read on
+ * 2026-11-04 and keep their earlier stamp.
+ */
+const CHECKED_2026_07_27 = "2026-07-27";
+const CHECKED_2026_11_04 = "2026-11-04";
 
 // ---------------------------------------------------------------------------
 // HHS poverty guidelines
@@ -54,7 +86,7 @@ const FPL_2025: PovertyGuidelines = {
     source: "HHS Poverty Guidelines (2025)",
     url: "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
     published: "2025-01-17",
-    checked: CHECKED,
+    checked: CHECKED_2026_07_27,
     status: "secondary-concordant",
     note:
       "Contiguous base $15,650 corroborated by the widely reported 400% PY2026 " +
@@ -67,34 +99,51 @@ const FPL_2025: PovertyGuidelines = {
 /**
  * 2026 HHS poverty guidelines. Govern plan year 2027 (OE opens 2026-11-01).
  *
- * WARNING: only the contiguous base and the 4-person amount are sourced. The
- * per-person increment is DERIVED arithmetic: (33,000 - 15,960) / 3 = 5,680.
- * Alaska and Hawaii are unverified placeholders and are gated at runtime.
+ * Read from the Federal Register notice itself on 2026-11-04:
+ *   91 FR 1797-1798 (2026-01-15), FR Doc. 2026-00755,
+ *   "Annual Update of the HHS Poverty Guidelines".
+ *
+ * All three regional tables are transcribed from that notice:
+ *
+ *   Household size   Contiguous    Alaska     Hawaii
+ *   1                   $15,960   $19,950   $18,360
+ *   2                   $21,640   $27,050   $24,890
+ *   3                   $27,320   $34,150   $31,420
+ *   4                   $33,000   $41,250   $37,950
+ *   5                   $38,680   $48,350   $44,480
+ *   6                   $44,360   $55,450   $51,010
+ *   7                   $50,040   $62,550   $57,540
+ *   8                   $55,720   $69,650   $64,070
+ *   each person over 8  +$5,680   +$7,100   +$6,530
+ *
+ * Alaska and Hawaii are the statutory regional variants of the contiguous
+ * table. This file stores each region's base (household of 1) plus a single
+ * increment, which is the shape HHS publishes them in. Alaska and Hawaii are
+ * no longer gated at runtime.
  */
 const FPL_2026: PovertyGuidelines = {
   guidelineYear: 2026,
   base: {
-    contiguous: 1_596_000, // $15,960
-    alaska: 0,
-    hawaii: 0,
+    contiguous: 1_596_000, // $15,960 — 91 FR 1797
+    alaska: 1_995_000, // $19,950 — 91 FR 1797
+    hawaii: 1_836_000, // $18,360 — 91 FR 1797
   },
   increment: {
-    contiguous: 568_000, // $5,680 (derived)
-    alaska: 0,
-    hawaii: 0,
+    contiguous: 568_000, // $5,680 per person over 4 — 91 FR 1798
+    alaska: 710_000, // $7,100 per person over 4 — 91 FR 1798
+    hawaii: 653_000, // $6,530 per person over 4 — 91 FR 1798
   },
   provenance: {
-    source: "HHS Poverty Guidelines (2026), 91 FR / FR Doc. 2026-00755",
+    source: "HHS Poverty Guidelines (2026), 91 FR 1797-1798",
     url: "https://www.federalregister.gov/documents/2026/01/15/2026-00755/annual-update-of-the-hhs-poverty-guidelines",
     published: "2026-01-15",
-    checked: CHECKED,
-    status: "derived",
+    checked: CHECKED_2026_11_04,
+    status: "primary-verified",
     note:
-      "Published 2026-01-15, effective 2026-01-13. Contiguous 1-person $15,960 " +
-      "and 4-person $33,000 are sourced; the $5,680 increment is derived as " +
-      "(33000-15960)/3 and MUST be confirmed against the ASPE table before " +
-      "production use. Alaska and Hawaii are zeroed placeholders and are " +
-      "rejected at runtime rather than silently returning a wrong credit.",
+      "Published 2026-01-15, effective 2026-01-13. Transcribed from the " +
+      "Federal Register notice on 2026-11-04: the contiguous base and the " +
+      "+$5,680 increment are now read directly rather than derived, and the " +
+      "Alaska and Hawaii tables are no longer placeholders.",
   },
 };
 
@@ -120,7 +169,7 @@ const APT_2026: ApplicablePercentageTable = {
     source: "IRS Rev. Proc. 2025-25",
     url: "https://www.irs.gov/pub/irs-drop/rp-25-25.pdf",
     published: "2025-07-18",
-    checked: CHECKED,
+    checked: CHECKED_2026_07_27,
     status: "secondary-single",
     note:
       "Endpoints 2.10% and 9.96% are corroborated by multiple secondary " +
@@ -152,14 +201,17 @@ const APT_2027: ApplicablePercentageTable = {
     source: "IRS Rev. Proc. 2026-26",
     url: "https://www.irs.gov/pub/irs-drop/rp-26-26.pdf",
     published: "2026-07-21",
-    checked: CHECKED,
-    status: "secondary-concordant",
+    checked: CHECKED_2026_11_04,
+    status: "primary-verified",
     note:
-      "Two independent secondary sources (a search summary of the primary PDF " +
-      "and Current Federal Tax Developments' technical writeup, 2026-07-21) " +
-      "agree on all six brackets. The primary PDF was not readable from the " +
-      "build environment. Range 2.15%-10.22% and the 10.22% required " +
-      "contribution percentage are separately corroborated by Thomson Reuters.",
+      "Read from the primary PDF (Rev. Proc. 2026-26, 2026-07-21) on " +
+      "2026-11-04. Section 3.01 publishes the 2027 applicable percentage " +
+      "table: 2.15% (under 133%), 3.23%/4.30% (133-150%), 4.30%/6.78% " +
+      "(150-200%), 6.78%/8.66% (200-250%), 8.66%/10.22% (250-300%), and " +
+      "10.22%/10.22% for 'at least 300% but not more than 400%'. Section " +
+      "3.02 sets the required contribution percentage at 10.22%. The table " +
+      "has no bracket above 400% of FPL, which is the dispositive signal " +
+      "that the pre-ARPA schedule — and the 400% cliff — governs 2027.",
   },
 };
 
@@ -189,7 +241,7 @@ const PY2026: PlanYearParameters = {
     source: "Composite — see individual sub-objects",
     url: "https://www.cms.gov/marketplace/resources/data/public-use-files",
     published: "2025-07-18",
-    checked: CHECKED,
+    checked: CHECKED_2026_07_27,
     status: "secondary-concordant",
   },
 };
@@ -211,18 +263,31 @@ const PY2027: PlanYearParameters = {
     end: null,
     endIsContested: true,
     note:
-      "CONTESTED. The 2025 Marketplace Integrity rule shortened the federal " +
-      "window to 2026-12-15. On 2026-06-12 the District of Maryland vacated " +
-      "that provision in City of Columbus v. Kennedy, No. 1:25-cv-2114; an " +
-      "appeal to the Fourth Circuit is pending. If the vacatur stands the " +
-      "window likely runs to 2027-01-15. Do not hardcode an end date in UI copy.",
+      "CONTESTED, and the published window itself is verified. HealthCare.gov " +
+      "publishes the 2027 federal open enrollment period as 2026-11-01 through " +
+      "2027-01-15, with 2026-12-15 the deadline for coverage starting " +
+      "2027-01-01; CMS confirmed the same window on 2026-07-27. The 2025 " +
+      "Marketplace Integrity and Affordability final rule (90 FR 27074) added " +
+      "45 CFR 155.410(e)(5), which would have required the window to end no " +
+      "later than 2026-12-15. The District of Maryland vacated that provision " +
+      "on 2026-06-12 in City of Columbus v. Kennedy, No. 1:25-cv-2114 (D. Md.). " +
+      "The government's appeal, 4th Cir. No. 26-1938, was argued 2026-10-30 and " +
+      "is undecided as of 2026-11-04, so the closing date is not settled. Do " +
+      "not hardcode an end date in UI copy.",
   },
   provenance: {
-    source: "Composite — see individual sub-objects",
-    url: "https://www.irs.gov/pub/irs-drop/rp-26-26.pdf",
-    published: "2026-07-21",
-    checked: CHECKED,
-    status: "secondary-concordant",
+    source:
+      "Composite — IRS Rev. Proc. 2026-26; 91 FR 1797-1798; HealthCare.gov; Congress.gov",
+    url: "https://www.healthcare.gov/quick-guide/dates-and-deadlines",
+    published: "2026-11-01",
+    checked: CHECKED_2026_11_04,
+    status: "primary-verified",
+    note:
+      "Primary sources read on 2026-11-04: Rev. Proc. 2026-26 (2027 applicable " +
+      "percentage table), 91 FR 1797-1798 (2026 poverty guidelines), the " +
+      "HealthCare.gov 2027 dates and deadlines page, and the Congress.gov bill " +
+      "record for H.R. 1834 and H.R. 5145 (no enacted extension of the " +
+      "enhanced credits).",
   },
 };
 

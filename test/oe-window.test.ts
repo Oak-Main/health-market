@@ -18,17 +18,34 @@ const oe = JSON.parse(read("public/oe-window.json")) as {
   primarySource: string;
   ruleStatus: string;
   stateNote: string;
+  subsidyStatus: {
+    asOf: string;
+    enhancedCreditsLapsedOn: string;
+    extensionEnacted: boolean;
+    maxFplPercent: number;
+    appliesToPlanYears: number[];
+    primarySources: string[];
+    basis: string;
+    congressRecord: string;
+  };
   nextReview: string;
 };
 
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+  "August", "September", "October", "November", "December"];
+
 const rendered = (iso: string): string => {
   const [y, m, d] = iso.split("-");
-  const month = ["January", "February", "March", "April", "May", "June", "July",
-    "August", "September", "October", "November", "December"][Number(m) - 1];
-  return `${month} ${Number(d)}, ${y}`;
+  return `${MONTHS[Number(m) - 1]} ${Number(d)}, ${y}`;
 };
 
-describe("Open Enrollment panel (2026-09-28 kit)", () => {
+/** "November 2026" — the form the rule-status line uses. */
+const renderedMonth = (iso: string): string => {
+  const [y, m] = iso.split("-");
+  return `${MONTHS[Number(m) - 1]} ${y}`;
+};
+
+describe("Open Enrollment panel (2026-11-04 pass)", () => {
   it("renders the JSON window and January-coverage deadline in the page", () => {
     expect(html).toContain(rendered(oe.window.starts));
     expect(html).toContain(rendered(oe.window.ends));
@@ -56,6 +73,44 @@ describe("Open Enrollment panel (2026-09-28 kit)", () => {
     expect(oe.stateNote.length).toBeGreaterThan(0);
     expect(oe.nextReview > oe.asOf).toBe(true);
   });
+
+  it("records the vacatur and the argued-but-undecided appeal in the spine", () => {
+    // The rendered caveat still says "paused"; the data behind it must carry
+    // the precise posture. See [[COPY: oe-window-litigation]] in ACCURACY.md.
+    expect(oe.ruleStatus).toMatch(/vacated/);
+    expect(oe.ruleStatus).toMatch(/1:25-cv-2114/);
+    expect(oe.ruleStatus).toMatch(/26-1938/);
+    expect(oe.ruleStatus).toMatch(/2026-10-30/);
+  });
+});
+
+describe("Rule-status line (subsidy status)", () => {
+  it("renders the status line dated to the spine's asOf stamp", () => {
+    expect(html).toContain(`Rule status as of ${renderedMonth(oe.subsidyStatus.asOf)}`);
+    expect(accuracy).toContain(`Rule status as of ${renderedMonth(oe.subsidyStatus.asOf)}`);
+  });
+
+  it("records the lapsed enhanced credits and the 400% cap as the fact", () => {
+    expect(oe.subsidyStatus.enhancedCreditsLapsedOn).toBe("2025-12-31");
+    expect(oe.subsidyStatus.extensionEnacted).toBe(false);
+    expect(oe.subsidyStatus.maxFplPercent).toBe(400);
+    expect(oe.subsidyStatus.appliesToPlanYears).toEqual([2026, 2027]);
+  });
+
+  it("cites Congress.gov and the IRS revenue procedure as the primary sources", () => {
+    for (const url of oe.subsidyStatus.primarySources) {
+      expect(url).toMatch(/^https:\/\//);
+      expect(accuracy).toContain(url);
+    }
+    expect(oe.subsidyStatus.primarySources.join(" ")).toMatch(/congress\.gov/);
+    expect(oe.subsidyStatus.primarySources.join(" ")).toMatch(/irs\.gov/);
+  });
+
+  it("keeps the page's claim and the spine's fact in step", () => {
+    expect(html).toMatch(/enhanced credits lapsed 31 December 2025/);
+    expect(html).toMatch(/Congress has not enacted an extension/);
+    expect(html).toMatch(/400% FPL cap applies to the 2026 and 2027 estimates/);
+  });
 });
 
 describe("Accuracy register covers the rendered claims", () => {
@@ -70,12 +125,19 @@ describe("Accuracy register covers the rendered claims", () => {
     ]) {
       expect(accuracy).toContain(claim);
     }
-    expect(accuracy).toContain("2026-09-28");
+    expect(accuracy).toContain("2026-11-04");
     expect(accuracy).toContain("https://www.healthcare.gov/quick-guide/dates-and-deadlines");
-    expect(accuracy).toContain("2026-10-15");
+    expect(accuracy).toContain("2026-12-15");
   });
 
   it("mentions the machine-readable spine so the two stay linked", () => {
     expect(accuracy).toContain("oe-window.json");
+  });
+
+  it("leaves a copy marker for the wording that moved", () => {
+    expect(accuracy).toContain("[[COPY: oe-window-litigation]]");
+    // The subsidy-status wording did not move, so it carries no marker.
+    expect(accuracy).toContain("[[COPY: subsidy-status]]");
+    expect(accuracy).toMatch(/\[\[COPY: subsidy-status\]\][^\n]*not needed/i);
   });
 });

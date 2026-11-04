@@ -98,7 +98,7 @@ export interface PlanYearParameters {
   /**
    * Whether the ARPA/IRA enhanced premium tax credits are in effect.
    *
-   * When false (the law as of 2026-07-27 for plan years 2026 and 2027), the
+   * When false (the law as of 2026-11-04 for plan years 2026 and 2027), the
    * pre-ARPA §36B schedule applies: the applicable percentage table below is
    * used verbatim and there is a hard eligibility cliff at 400% FPL.
    *
@@ -141,9 +141,11 @@ export interface OpenEnrollmentWindow {
   readonly januaryFirstDeadline: string;
   /**
    * ISO date the window closes on the federal platform, or null if genuinely
-   * unsettled. As of 2026-07-27 the PY2027 end date is contested: the rule
+   * unsettled. As of 2026-11-04 the PY2027 end date is contested: the rule
    * shortening it to Dec 15 was vacated in City of Columbus v. Kennedy
-   * (D. Md., 2026-06-12) and is under appeal to the Fourth Circuit.
+   * (D. Md., 2026-06-12) and the government's appeal, 4th Cir. No. 26-1938,
+   * was argued 2026-10-30 with no decision yet. HealthCare.gov publishes the
+   * window as 2026-11-01 through 2027-01-15.
    */
   readonly end: string | null;
   readonly endIsContested: boolean;

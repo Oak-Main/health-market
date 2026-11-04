@@ -20,14 +20,20 @@ jobs:
           node-version: 24
           cache: npm
       - name: Install exactly the committed lockfile
+        id: install
         run: npm ci
       - name: Verify installed dependency security floors
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run check:security-floor
       - name: Typecheck application
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run typecheck
       - name: Typecheck subsidy engine
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run engine:typecheck
       - name: Run existing engine and application tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm test
       - name: Build application
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run build

@@ -1,3 +1,4 @@
+import { UnverifiedDataError } from "@/src/core/plan-years"
 import { runEstimate } from "@/lib/server-estimate"
 import type { EstimateResult } from "@/lib/estimate"
 import { CliffChart } from "@/components/cliff-chart"
@@ -15,9 +16,12 @@ const DEMO = {
 } as const
 
 export async function LiveDemo() {
-  const response = await runEstimate({ ...DEMO, includeCurve: true })
-  if (!response.ok || !response.result) {
-    return null
+  const response = await runEstimate({ ...DEMO, includeCurve: true }).catch((error: unknown) => {
+    if (error instanceof UnverifiedDataError) return null
+    throw error
+  })
+  if (!response?.ok || !response.result) {
+    return <p className="mx-auto max-w-6xl px-6 py-8">The worked example is unavailable until the Harris County benchmark is verified.</p>
   }
   const result = response.result as EstimateResult
   const { cliff, ptc } = result
@@ -32,7 +36,7 @@ export async function LiveDemo() {
             id="demo-heading"
             className="max-w-2xl text-balance font-serif text-3xl leading-tight md:text-4xl"
           >
-            A married couple, both early sixties, in Harris County, Texas.
+            A married couple, ages 60 and 58, in Harris County, Texas.
           </h2>
           <p className="max-w-2xl text-pretty leading-relaxed text-muted-foreground">
             They earn {formatDollars(DEMO.income)} a year. Here is where their premium tax

@@ -98,7 +98,7 @@ export interface PlanYearParameters {
   /**
    * Whether the ARPA/IRA enhanced premium tax credits are in effect.
    *
-   * When false (the law as of 2026-07-27 for plan years 2026 and 2027), the
+   * When false (the law as of 2026-11-04 for plan years 2026 and 2027), the
    * pre-ARPA §36B schedule applies: the applicable percentage table below is
    * used verbatim and there is a hard eligibility cliff at 400% FPL.
    *
@@ -139,13 +139,10 @@ export interface OpenEnrollmentWindow {
   readonly start: string;
   /** ISO date: last day to enroll for coverage effective Jan 1. */
   readonly januaryFirstDeadline: string;
-  /**
-   * ISO date the window closes on the federal platform, or null if genuinely
-   * unsettled. As of 2026-07-27 the PY2027 end date is contested: the rule
-   * shortening it to Dec 15 was vacated in City of Columbus v. Kennedy
-   * (D. Md., 2026-06-12) and is under appeal to the Fourth Circuit.
-   */
+  /** Settled closing date. Null during a legal challenge for older API clients. */
   readonly end: string | null;
+  /** Currently published closing date, read together with endIsContested and note. */
+  readonly publishedEnd: string;
   readonly endIsContested: boolean;
   readonly note?: string;
 }
@@ -177,8 +174,8 @@ export interface FplResult {
   /** Unrounded ratio, income / FPL. For display and diagnostics only. */
   readonly exactRatio: number;
   /**
-   * Household income as a percent of FPL per Form 8962 line 5: rounded to the
-   * nearest whole number, or 401 when income exceeds 4x FPL.
+   * Household income as a percent of FPL per Form 8962 line 5: discard the
+   * fractional part, or 401 when income exceeds 4x FPL.
    */
   readonly form8962Percent: number;
   /** True when income > 4 x FPL (the raw test, performed before rounding). */

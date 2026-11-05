@@ -10,6 +10,7 @@ name: Deploy to Cloudflare Pages
 # plan year is the entire data refresh procedure.
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -26,19 +27,26 @@ on:
     - cron: "0 11 * * 1"
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-${{ github.event_name == 'schedule' && 'refs/heads/main' || github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.revision.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Scheduled events originate on the repository default branch. Pages serves main.
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.sha }}
+      - name: Record the revision being verified
+        id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -46,63 +54,54 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
+      - run: npm run engine:typecheck
+      - run: npm run check:security-floor
       - name: Test
         run: npm test
+      - name: Verify the production build and HTTP responses before merge
+        if: github.event_name == 'pull_request'
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run check:production
 
   deploy:
     name: Build data and deploy
     needs: verify
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify.outputs.revision }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
 
-      - name: Build benchmark data from CMS public use files
-        id: etl
-        continue-on-error: true
-        run: npm run etl -- --plan-year=${{ github.event.inputs.planYear || '2026' }} --out=public/data
-
-      - name: Report data status
-        id: data-status
-        run: |
-          if [ -d public/data ] && [ -n "$(find public/data -name '*.json' -print -quit)" ]; then
-            COUNT=$(find public/data -name '*.json' ! -name 'index.json' | wc -l)
-            echo "::notice::Built $COUNT benchmark shards from CMS."
-            echo "### Benchmark data: $COUNT shards built" >> "$GITHUB_STEP_SUMMARY"
-            echo "shards_empty=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::ETL produced no shards. Deploying anyway — the API will \
-            return an honest 'dataset-not-loaded' rather than an invented premium. \
-            Check whether CMS has published this plan year yet."
-            echo "### Benchmark data: NONE — API will report data unavailable" >> "$GITHUB_STEP_SUMMARY"
-            echo "shards_empty=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Guard against shipping synthetic premiums
-        run: |
-          if grep -rl "SYNTHETIC" public/data 2>/dev/null; then
-            echo "::error::Synthetic fixture data found in the deploy artifact. Refusing to deploy."
-            exit 1
-          fi
-          echo "No synthetic data in the artifact."
+      - name: Build with verified fresh CMS data and smoke-test before publication
+        env:
+          NODE_OPTIONS: --max-old-space-size=6500
+          PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run check:production
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy public --project-name=subsidy-dropoff --branch=${{ github.ref_name }}
+          command: pages deploy public --project-name=subsidy-dropoff --branch=${{ github.event_name == 'schedule' && 'main' || github.ref_name }}
 
       # Nothing upstream of this step pages anyone on its own — a failed run
       # or an empty-shard deploy would otherwise only be visible to someone
       # who happens to check Actions. This is what makes that visible.
       - name: Alert on deploy failure or empty dataset
-        if: failure() || steps.data-status.outputs.shards_empty == 'true'
+        if: failure()
         run: |
           gh issue create \
             --repo "${{ github.repository }}" \

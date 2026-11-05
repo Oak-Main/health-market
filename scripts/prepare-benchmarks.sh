@@ -11,7 +11,12 @@ if ! mkdir "$lock"; then
   echo 'Another benchmark refresh owns the project lock.' >&2
   exit 1
 fi
+new_in_place=false
+verified=false
 cleanup() {
+  if [[ "$new_in_place" == true && "$verified" == false ]]; then
+    mv -- public/data "$work/rejected" || { echo "Retained release files in $work" >&2; return 1; }
+  fi
   if [[ -d "$work/previous" && ! -e public/data ]]; then
     mv -- "$work/previous" public/data || { echo "Prior data retained in $work/previous" >&2; return 1; }
   fi
@@ -24,3 +29,6 @@ node --import tsx src/etl/run.ts "--plan-year=$year" "--out=$work/staged"
 node --import tsx src/etl/verify.ts "$work/staged" "$year"
 if [[ -e public/data ]]; then mv -- public/data "$work/previous"; fi
 mv -- "$work/staged" public/data
+new_in_place=true
+node --import tsx src/etl/verify.ts public/data "$year"
+verified=true

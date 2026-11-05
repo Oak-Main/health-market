@@ -17,6 +17,7 @@ Machine-readable mirror of the Open Enrollment row: `public/oe-window.json`
 | 6 | Rule-status line: "Rule status as of November 2026: the enhanced credits lapsed 31 December 2025 and Congress has not enacted an extension, so the 400% FPL cap applies to the 2026 and 2027 estimates below." | Lapsed 2025-12-31; `extensionEnacted: false`; 400% cap applies to plan years 2026 and 2027 | 2026-11-04 | https://www.congress.gov/bill/119th-congress/house-bill/1834/all-actions · https://www.congress.gov/bill/119th-congress/house-bill/5145/all-actions · https://www.irs.gov/pub/irs-drop/rp-26-26.pdf | 2026-12-15 | Owner |
 | 7 | Federal income test for 2027 coverage, including Alaska and Hawaii | General range of 100% through 400% of the 2026 HHS guideline for the tax household. One person: contiguous/DC $15,960–$63,840, Alaska $19,950–$79,800, Hawaii $18,360–$73,440. The upper endpoint is included. | 2026-11-05 | https://www.govinfo.gov/content/pkg/FR-2026-01-15/pdf/2026-00755.pdf · https://www.irs.gov/pub/irs-drop/rp-26-26.pdf · https://www.irs.gov/affordable-care-act/individuals-and-families/questions-and-answers-on-the-premium-tax-credit | 2026-12-15 | Owner |
 | 8 | Search and social descriptions | HealthCare.gov lists November 1, 2026 through January 15, 2027 for 2027 enrollment. The pending appeal could change dates. State deadlines may differ. | 2026-11-05 | https://www.healthcare.gov/quick-guide/dates-and-deadlines/ · https://www.healthcare.gov/marketplace-in-your-state/ | On a court order or CMS update, and by 2026-12-15 | Owner |
+| 9 | Regional guideline increments used for plan year 2026 | The 2025 HHS notice adds $6,880 in Alaska and $6,330 in Hawaii per additional household member. | 2026-11-05 | https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm | 2026-12-15 | Owner |
 
 ## Enrollment and calculator verification, November 5, 2026
 
@@ -24,7 +25,7 @@ The signed order in City of Columbus v. Kennedy, D. Md. No. 1:25-cv-02114, ECF 7
 
 The federal income test is one part of eligibility. IRS Form 8962 Worksheet 2 compares income with four times the guideline before discarding fractional percentage points. An income check can show the household's range and contribution without a local premium. A dollar estimate based on a user-entered Marketplace benchmark is labeled separately. The selected plan's qualifying premium and other eligibility rules can limit the actual credit. The automatic ZIP-based calculator requires a verified local benchmark for the requested year. Sources: https://www.irs.gov/instructions/i8962 and https://www.cms.gov/marketplace/resources/data/public-use-files.
 
-The 2026 income check was also rechecked against the 2025 HHS notice. Alaska adds $6,880 and Hawaii adds $6,330 per additional person. Source: https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm.
+On November 5, the 2027 IRS schedule (Rev. Proc. 2026-26) and the 2026 HHS notice were independently reread. The plan year 2026 income check was also rechecked against the 2025 HHS notice. Alaska adds $6,880 and Hawaii adds $6,330 per additional person. Source: https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm.
 
 ## Verification trail (2026-11-04 pass)
 

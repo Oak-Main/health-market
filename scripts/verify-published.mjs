@@ -21,9 +21,20 @@ async function verify() {
   const index = await (await get(`/data/${year}/index.json`)).json();
   assert.equal(index.generated, manifest.generated, 'Custom domain is serving a different benchmark build');
   assert.equal(index.shardCount, manifest.shardCount);
-  const result = await (await get('/api/income-check', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({planYear:2027,region:'alaska',householdSize:1,income:79800.01,monthlyBenchmark:1000})})).json();
-  assert.equal(result.incomeStatus, 'above');
-  assert.equal(result.estimatedMonthlyBenchmarkCredit, 0);
+  const prefix = manifest.prefixes[0];
+  const expectedShard = JSON.parse(readFileSync(new URL(`../public/data/${year}/${prefix}.json`, import.meta.url), 'utf8'));
+  const shard = await (await get(`/data/${year}/${prefix}.json`)).json();
+  assert.deepEqual(shard, expectedShard, 'Published benchmark shard differs from the verified build');
+  for (const [region, ceiling, credit] of [['alaska', 79800, 32037], ['hawaii', 73440, 37454]]) {
+    for (const [income, status, cents] of [[ceiling, 'within', credit], [ceiling + 0.01, 'above', 0]]) {
+      const result = await (await get('/api/income-check', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ planYear: 2027, region, householdSize: 1, income, monthlyBenchmark: 1000 }),
+      })).json();
+      assert.equal(result.incomeStatus, status);
+      assert.equal(result.estimatedMonthlyBenchmarkCredit, cents);
+    }
+  }
 }
 for (let attempt = 1; ; attempt++) {
   try { await verify(); break; }

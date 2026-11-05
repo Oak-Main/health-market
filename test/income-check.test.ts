@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { handleRequest } from "../src/api/handler";
 import { NullBenchmarkProvider } from "../src/core/benchmark";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { UnverifiedDataError } from "../src/core/plan-years";
@@ -46,7 +46,8 @@ describe("income checks without a ZIP premium", () => {
     }
   });
   it("treats a Cloudflare HTML fallback as a missing shard or index", async () => {
-    const loader = new AssetShardLoader({ fetch: async () => new Response('<title>Subsidy Dropoff — calculator</title><form id="f"></form>', { headers: { "content-type": "text/html; charset=utf-8" } }) });
+    const homepage = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+    const loader = new AssetShardLoader({ fetch: async () => new Response(homepage, { headers: { "content-type": "text/html; charset=utf-8" } }) });
     expect(await loader.load(2027, "968")).toBeNull();
     expect(await loader.loadIndex(2027)).toBeNull();
   });

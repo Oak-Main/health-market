@@ -10,11 +10,12 @@ if (!root) throw new Error("Pass the staged benchmark directory, e.g. npm run et
 const year = Number(process.argv[3] ?? BENCHMARK_SOURCE_RELEASE.planYear);
 if (year !== BENCHMARK_SOURCE_RELEASE.planYear) throw new Error("Unregistered benchmark year");
 const dir = join(root, String(year));
-const index = JSON.parse(await readFile(join(dir, "index.json"), "utf8")) as ShardIndex & { shardsFailedValidation: number };
+const index = JSON.parse(await readFile(join(dir, "index.json"), "utf8")) as ShardIndex & { shardsFailedValidation: number; sourceCountyCount: number };
 const prefixes = index.prefixes;
 if (index.planYear !== year || !Number.isInteger(index.countiesBuilt) || index.countiesBuilt < BENCHMARK_SOURCE_RELEASE.minimumCounties ||
     !Number.isInteger(index.countiesSkipped) || index.countiesSkipped < 0 ||
-    index.countiesBuilt < 0.9 * (index.countiesBuilt + index.countiesSkipped) || index.shardsFailedValidation !== 0 ||
+    !Number.isInteger(index.sourceCountyCount) || index.sourceCountyCount < index.countiesBuilt + index.countiesSkipped ||
+    index.shardsFailedValidation !== 0 ||
     !Array.isArray(prefixes) || !prefixes.length || prefixes.length !== index.shardCount ||
     new Set(prefixes).size !== prefixes.length || !prefixes.every(p => /^\d{3}$/.test(p))) {
   throw new Error("Invalid or empty benchmark manifest");
@@ -35,7 +36,8 @@ for (const prefix of prefixes) {
     for (const fips of fipsList) coveredCounties.add(fips);
   }
 }
-if (coveredCounties.size < BENCHMARK_SOURCE_RELEASE.minimumCounties) {
-  throw new Error(`Only ${coveredCounties.size} counties are reachable through ZIP codes in the staged release.`);
+if (coveredCounties.size < BENCHMARK_SOURCE_RELEASE.minimumCounties ||
+    coveredCounties.size < index.sourceCountyCount * BENCHMARK_SOURCE_RELEASE.minimumSourceShare) {
+  throw new Error(`Only ${coveredCounties.size} of ${index.sourceCountyCount} source counties are reachable through ZIP codes in the staged release.`);
 }
 console.log("Verified " + prefixes.length + " benchmark shards for " + year);

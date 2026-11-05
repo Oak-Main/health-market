@@ -17,7 +17,10 @@ const DEMO = {
 
 export async function LiveDemo() {
   const response = await runEstimate({ ...DEMO, includeCurve: true }).catch((error: unknown) => {
-    if (error instanceof UnverifiedDataError) return null
+    if (error instanceof UnverifiedDataError) {
+      console.warn("Worked-example benchmark unavailable:", error.message)
+      return null
+    }
     throw error
   })
   if (!response?.ok || !response.result) {
@@ -36,7 +39,7 @@ export async function LiveDemo() {
             id="demo-heading"
             className="max-w-2xl text-balance font-serif text-3xl leading-tight md:text-4xl"
           >
-            A married couple, ages 60 and 58, in Harris County, Texas.
+            A married couple, ages {DEMO.ages[0]} and {DEMO.ages[1]}, in Harris County, Texas.
           </h2>
           <p className="max-w-2xl text-pretty leading-relaxed text-muted-foreground">
             They earn {formatDollars(DEMO.income)} a year. Here is where their premium tax

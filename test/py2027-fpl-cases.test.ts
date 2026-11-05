@@ -117,7 +117,7 @@ describe("plan year 2027 — 399% of FPL", () => {
       size: 2, members: [adult(60), adult(58)], annualIncome: USD(dollars),
     }), BENCHMARK);
     expect(atIncome(86_559).eligible).toBe(true);
-    expect(atIncome(86_560).annualPtc).toBeGreaterThan(USD(11_000));
+    expect(atIncome(86_560).annualPtc).toBe(USD(11_153.57));
     expect(atIncome(86_560.01).annualPtc).toBe(0);
   });
 });

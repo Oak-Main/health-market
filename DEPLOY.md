@@ -72,8 +72,10 @@ The workflow builds into an empty temporary directory. It promotes the dataset o
 
 ```bash
 npx wrangler login
-npm ci && npm test
-npm run benchmarks:prepare || exit 1
+set -e
+npm ci
+npm run typecheck && npm run engine:typecheck && npm run check:security-floor && npm test
+npm run check:production
 npx wrangler pages deploy public --project-name=subsidy-dropoff --branch=main
 ```
 

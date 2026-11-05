@@ -14,12 +14,21 @@ const year = process.env.PLAN_YEAR || '2026';
 if (!/^\d{4}$/.test(year)) throw new Error('Expected a four-digit plan year');
 const live = join(dataRoot, year);
 const nodeEnv = { ...process.env, NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=6500' };
+let activeChild;
+let interrupted;
+function interrupt(signal) {
+  interrupted = signal;
+  activeChild?.kill(signal);
+}
 function run(script, ...args) {
+  if (interrupted) throw new Error(`Benchmark refresh interrupted by ${interrupted}`);
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['--import', 'tsx', script, ...args], { cwd: project, stdio: 'inherit', env: nodeEnv });
+    activeChild = child;
     child.once('error', reject);
     child.once('close', (code, signal) => {
-      if (code === 0) resolve();
+      activeChild = undefined;
+      if (code === 0 && !interrupted) resolve();
       else reject(new Error(`${script} failed (${signal || code})`));
     });
   });
@@ -28,6 +37,8 @@ function run(script, ...args) {
 // A live refresh renews this lease while the child processes run. A terminated
 // owner stops renewing it, so subsequent builds can reclaim it after two minutes.
 const releaseLock = await lockfile.lock(project, { lockfilePath: lock, stale: 120_000, update: 15_000 });
+process.on('SIGTERM', interrupt);
+process.on('SIGINT', interrupt);
 let work;
 let preserveBackup = false;
 try {
@@ -44,9 +55,13 @@ try {
   } catch (error) {
     // Retain the backup if recovery itself fails.
     preserveBackup = true;
-    if (existsSync(live)) renameSync(live, join(work, 'rejected'));
-    if (existsSync(backup)) renameSync(backup, live);
-    preserveBackup = false;
+    try {
+      if (existsSync(live)) renameSync(live, join(work, 'rejected'));
+      if (existsSync(backup)) renameSync(backup, live);
+      preserveBackup = false;
+    } catch (recoveryError) {
+      throw new AggregateError([error, recoveryError], `Benchmark recovery failed. Inspect the backup at ${backup}.`, { cause: error });
+    }
     throw error;
   }
 } finally {
@@ -54,5 +69,7 @@ try {
     if (work && !preserveBackup) rmSync(work, { recursive: true, force: true });
   } finally {
     await releaseLock();
+    process.off('SIGINT', interrupt);
+    process.off('SIGTERM', interrupt);
   }
 }

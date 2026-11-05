@@ -27,6 +27,17 @@ function assertValid(shard: BenchmarkShard, key: string): BenchmarkShard {
   return shard;
 }
 
+async function missingAsset(response: Response): Promise<boolean> {
+  if (response.status === 404) return true;
+  if (response.ok && response.headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
+    const html = await response.text();
+    // Cloudflare Pages can resolve an absent static path to this site's homepage.
+    if (/<title>Subsidy Dropoff/i.test(html) && /<form\b[^>]*\bid=["']f["']/i.test(html)) return true;
+    throw new Error("The benchmark asset returned an unexpected HTML page.");
+  }
+  return false;
+}
+
 /** Reads shards from the filesystem. Used by the dev server and by Node hosts. */
 export class FileShardLoader implements ShardLoader {
   private readonly cache = new Map<string, BenchmarkShard | null>();
@@ -85,7 +96,7 @@ export class AssetShardLoader implements ShardLoader {
     const response = await this.fetcher.fetch(
       new Request(`https://assets.local${this.basePath}/${planYear}/${zip3}.json`),
     );
-    if (response.status === 404 || (response.ok && response.headers.get("content-type")?.startsWith("text/html"))) {
+    if (await missingAsset(response)) {
       this.cache.set(key, null);
       return null;
     }
@@ -101,7 +112,7 @@ export class AssetShardLoader implements ShardLoader {
     const response = await this.fetcher.fetch(
       new Request(`https://assets.local${this.basePath}/${planYear}/index.json`),
     );
-    if (response.status === 404 || (response.ok && response.headers.get("content-type")?.startsWith("text/html"))) return null;
+    if (await missingAsset(response)) return null;
     if (!response.ok) {
       throw new Error(`index.json fetch for plan year ${planYear} failed: HTTP ${response.status}`);
     }

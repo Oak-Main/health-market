@@ -24,6 +24,8 @@ The signed order in City of Columbus v. Kennedy, D. Md. No. 1:25-cv-02114, ECF 7
 
 The federal income test is one part of eligibility. IRS Form 8962 Worksheet 2 compares income with four times the guideline before discarding fractional percentage points. An income check can show the household's range and contribution without a local premium. A dollar estimate based on a user-entered Marketplace benchmark is labeled separately. The selected plan's qualifying premium and other eligibility rules can limit the actual credit. The automatic ZIP-based calculator requires a verified local benchmark for the requested year. Sources: https://www.irs.gov/instructions/i8962 and https://www.cms.gov/marketplace/resources/data/public-use-files.
 
+The 2026 income check was also rechecked against the 2025 HHS notice. Alaska adds $6,880 and Hawaii adds $6,330 per additional person. Source: https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm.
+
 ## Verification trail (2026-11-04 pass)
 
 - **HealthCare.gov dates-and-deadlines** — read directly on 2026-11-04 (the page

@@ -32,6 +32,13 @@ describe("income checks without a ZIP premium", () => {
       expect(above).toMatchObject({ incomeStatus: "above", estimatedMonthlyBenchmarkCredit: 0 });
     }
   });
+  it("also verifies multi-person Alaska and Hawaii guidelines for the 2026 plan year", async () => {
+    for (const [region, floor] of [["alaska", 26430], ["hawaii", 24320]] as const) {
+      const result = await (await check({ region, planYear: 2026, householdSize: 2, income: floor })).json();
+      expect(result).toMatchObject({ minimumIncome: floor * 100, maximumIncome: floor * 400,
+        povertySourceStatus: "primary-verified", incomeStatus: "within" });
+    }
+  });
   it("rejects invalid locations, fractions of a cent, and empty numeric inputs", async () => {
     for (const inputs of [{ region: "" }, { region: "PR" }, { income: "" }, { householdSize: 0 },
       { income: 79800.001 }, { monthlyBenchmark: 0 }, { monthlyBenchmark: 0.001 }, { planYear: 2030 }]) {
@@ -39,7 +46,7 @@ describe("income checks without a ZIP premium", () => {
     }
   });
   it("treats a Cloudflare HTML fallback as a missing shard or index", async () => {
-    const loader = new AssetShardLoader({ fetch: async () => new Response("<!doctype html>", { headers: { "content-type": "text/html; charset=utf-8" } }) });
+    const loader = new AssetShardLoader({ fetch: async () => new Response('<title>Subsidy Dropoff — calculator</title><form id="f"></form>', { headers: { "content-type": "text/html; charset=utf-8" } }) });
     expect(await loader.load(2027, "968")).toBeNull();
     expect(await loader.loadIndex(2027)).toBeNull();
   });
@@ -62,6 +69,8 @@ describe("income checks without a ZIP premium", () => {
   it("keeps malformed JSON and upstream faults visible", async () => {
     const badJson = new AssetShardLoader({ fetch: async () => new Response("invalid", { headers: { "content-type": "application/json" } }) });
     await expect(badJson.load(2027, "995")).rejects.toThrow();
+    const badHtml = new AssetShardLoader({ fetch: async () => new Response("<h1>Origin error</h1>", { headers: { "content-type": "text/html" } }) });
+    await expect(badHtml.load(2027, "995")).rejects.toThrow(/unexpected HTML/);
     const failed = new AssetShardLoader({ fetch: async () => new Response("failure", { status: 502 }) });
     await expect(failed.loadIndex(2027)).rejects.toThrow(/502/);
   });

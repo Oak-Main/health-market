@@ -343,6 +343,7 @@ async function incomeCheck(request: Request): Promise<Response> {
     annualRequiredContribution: contribution?.annual ?? null,
     suppliedMonthlyBenchmark: benchmark, estimatedMonthlyBenchmarkCredit: benchmarkCredit,
     povertySource: params.povertyGuidelines.provenance.url,
+    povertySourceStatus: params.povertyGuidelines.provenance.status,
     rateSource: params.applicablePercentageTable.provenance.url,
     disclaimer: DISCLAIMER,
   }, 200);
@@ -362,7 +363,7 @@ export async function handleRequest(
     // not just the first configured one — a currently-served ZIP could sit
     // on an older plan year while the newest is still unpublished.
     let freshness: { generated: string } | null = null;
-    for (const planYear of SUPPORTED_PLAN_YEARS) {
+    for (const planYear of [...SUPPORTED_PLAN_YEARS].sort((a, b) => b - a)) {
       const found = await provider.getFreshness?.(planYear);
       if (found) {
         freshness = found;

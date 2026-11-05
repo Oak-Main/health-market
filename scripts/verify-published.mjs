@@ -6,8 +6,11 @@ const origin = 'https://subsidydropoff.com';
 const expected = JSON.parse(readFileSync(new URL('../public/oe-window.json', import.meta.url), 'utf8'));
 const year = process.env.PLAN_YEAR || '2026';
 const manifest = JSON.parse(readFileSync(new URL(`../public/data/${year}/index.json`, import.meta.url), 'utf8'));
+const deadline = Date.now() + 120_000;
 async function get(path, options) {
-  const res = await fetch(origin + path, { ...options, signal: AbortSignal.timeout(12_000) });
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) throw new Error('Publication verification timed out');
+  const res = await fetch(origin + path, { cache: 'no-store', ...options, signal: AbortSignal.timeout(Math.min(12_000, remaining)) });
   assert.equal(res.status, 200, path);
   return res;
 }
@@ -25,9 +28,10 @@ async function verify() {
 for (let attempt = 1; ; attempt++) {
   try { await verify(); break; }
   catch (error) {
-    if (attempt >= 12) throw error;
-    console.log(`Waiting for the deployed site (${attempt}/12): ${error.message}`);
-    await delay(10_000);
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw error;
+    console.log(`Waiting for the deployed site (attempt ${attempt}): ${error.message}`);
+    await delay(Math.min(10_000, remaining));
   }
 }
 console.log(`Verified published enrollment and ${year} benchmark release ${manifest.generated} on ${origin}`);

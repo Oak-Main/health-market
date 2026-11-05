@@ -18,6 +18,7 @@ export default function HomePage() {
         <Hero />
         <section id="oe" className="mx-auto max-w-6xl space-y-3 px-6 py-8 text-sm">
           <h2 className="font-serif text-2xl">2027 Marketplace enrollment</h2>
+          <p>Checked <time dateTime={enrollment.asOf}>{new Date(`${enrollment.asOf}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</time>.</p>
           <p>{enrollment.datesSummary}</p>
           <p>{enrollment.ruleStatus}</p>
           <p>{enrollment.stateNote} <a className="underline" href={enrollment.stateSource}>Find your Marketplace</a>.</p>

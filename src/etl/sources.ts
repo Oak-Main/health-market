@@ -232,14 +232,13 @@ function csvQuote(value: string): string {
 }
 
 /** One-sheet XLSX parts -> CSV text with a header row, as the Socrata feed served. */
-function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string {
+export function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string {
   // Workbooks can carry a small notes sheet ahead of the data sheet (the
   // PY2026 landscape does); the data sheet is always the largest worksheet.
   const worksheet = largestMember(parts, /^xl\/worksheets\/[^/]+\.xml$/i);
   if (!worksheet) {
     throw new Error(`XLSX from ${sourceUrl} has no worksheet part (found: ${Object.keys(parts).join(", ")})`);
   }
-  // Each indexed capture below is mandatory in its matching expression. Empty tags capture "".
   const shared: string[] = [];
   const sharedXml = parts["xl/sharedStrings.xml"];
   if (sharedXml) {
@@ -254,15 +253,15 @@ function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string
   const rows: string[] = [];
   // exec-loop rather than matchAll: the data sheet can be hundreds of MB and
   // matchAll would materialise every row substring at once.
-  const rowRe = /<row(?:\s[^>]*)?>([\s\S]*?)<\/row>/g;
+  const rowRe = /<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g;
   let rowMatch: RegExpExecArray | null;
   while ((rowMatch = rowRe.exec(sheet)) !== null) {
     const cells: string[] = [];
-    const cellRe = /<c(\s[^>]*)?>([\s\S]*?)<\/c>/g;
+    const cellRe = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
     let cellMatch: RegExpExecArray | null;
-    while ((cellMatch = cellRe.exec(rowMatch[1]!)) !== null) {
+    while ((cellMatch = cellRe.exec(rowMatch[1] ?? "")) !== null) {
       const attrs = cellMatch[1] ?? "";
-      const body = cellMatch[2]!;
+      const body = cellMatch[2] ?? "";
       const refMatch = /r="([A-Z]+)\d+"/.exec(attrs);
       const idx = refMatch ? colIndex(refMatch[1]!) : cells.length;
       const type = /t="([^"]+)"/.exec(attrs)?.[1];

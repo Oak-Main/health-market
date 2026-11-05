@@ -37,7 +37,7 @@ describe("2027 federal open enrollment", () => {
 
   it("carries the primary source link and the asOf verification stamp", () => {
     expect(html).toContain(`href="${oe.primarySource}"`);
-    expect(html).toContain(`datetime="${oe.asOf}"`);
+    expect(html).toContain(`<time datetime="${oe.asOf}">${rendered(oe.asOf)}</time>`);
   });
 
   it("publishes the same dated ruling, coverage, and state guidance in the page and register", () => {

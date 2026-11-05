@@ -271,7 +271,7 @@ export function buildPtcCurve(
       const fplAmt = incomeAtFplPercent(params, 100, size, region);
       return {
         annualIncome,
-        fplPercent: Math.round((annualIncome * 100) / fplAmt),
+        fplPercent: Math.floor((annualIncome * 100) / fplAmt),
         annualPtc,
         annualRequiredContribution: contribution?.annual ?? 0,
         annualNetPremium: annualBenchmarkPremium - annualPtc,

@@ -70,7 +70,7 @@ function renderResult(d) {
   const { ptc, cliff, csr, benchmark } = r;
 
   const over = ptc.ineligibilityReason === "income-above-400-percent";
-  const tone = over ? "over" : cliff.cliffIsLive ? "live" : "";
+  const tone = over ? "over" : ptc.eligible && cliff.cliffIsLive ? "live" : "";
 
   let headline;
   if (ptc.ineligibilityReason === "income-below-minimum") {

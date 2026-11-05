@@ -140,17 +140,7 @@ npm run etl -- --plan-year=2026 --from-dir=./downloads   # offline
 
 Requires outbound HTTPS to `healthdata.gov`, `data.healthcare.gov`, `download.cms.gov`.
 
-Shards are **not** committed — `.github/workflows/deploy.yml` rebuilds them from the
-published files on every deploy and ships them as static assets, so production never
-talks to CMS at request time and the data cannot silently drift from source. When CMS
-publishes plan year 2027 (expect ~October 2026), the entire refresh procedure is
-re-running that workflow with `planYear: 2027`.
-
-> **The dataset in this repo is the synthetic fixture.** Every premium in
-> `src/fixtures/` is invented. `sourceFile` is the sentinel string
-> `SYNTHETIC-FIXTURE — NOT REAL CMS DATA`, which propagates into every API response;
-> `assertNotSynthetic()` is the guard for production bootstrap. Run the ETL from a
-> networked environment before deploying.
+The repository includes a historical 2026 snapshot. The release workflow downloads and verifies current CMS files and serves the resulting shards as static assets. The synthetic fixture in `src/fixtures/` is reserved for tests. CMS has published 2027 files. A year-specific source registry and verified ZIP coverage are required before the automatic local price calculator can serve that year. Use `npm run benchmarks:prepare` before `npm run dev` for fresh local prices.
 
 ---
 

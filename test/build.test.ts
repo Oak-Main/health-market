@@ -10,12 +10,18 @@ import {
   type CsvRow,
 } from "../src/etl/build.js";
 import { parseCsv, parseCsvTable, parseMoneyToCents, parseRatePufAge, CsvError } from "../src/etl/csv.js";
+import { xlsxToCsv } from "../src/etl/sources.js";
 import { validateShard } from "../src/data/shard.js";
 import type { MetalLevel, NormalisedPlanRate } from "../src/etl/slcsp.js";
 
 it("normalizes geographic codes without admitting a blank, malformed or all-zero ZIP or county", () => {
   for (const raw of ["", "  ", "0", "00000", "0xy45", "123456"]) expect(normalizeGeographicCode(raw)).toBeNull();
   expect(normalizeGeographicCode(" 1234 ")).toBe("01234");
+});
+
+it("keeps the next CMS cell and next row when styled empty cells or rows are self-closing", () => {
+  const xml = '<worksheet><row r="1"/><row r="2"><c r="A2"/><c r="B2" s="3"/><c r="C2"><v>77</v></c></row></worksheet>';
+  expect(xlsxToCsv({ "xl/worksheets/sheet1.xml": new TextEncoder().encode(xml) }, "fixture")).toBe("\r\n,,77\r\n");
 });
 
 const USD = (d: number): number => Math.round(d * 100);

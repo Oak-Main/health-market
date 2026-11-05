@@ -246,6 +246,10 @@ const SOURCES = [
     detail: "Govern plan year 2026. Contiguous single-person base $15,650. Published January 17, 2025.",
   },
   {
+    title: "HHS Poverty Guidelines (2026), 91 FR 1797–1798",
+    detail: "The regional tables govern 2027 coverage. One-person guidelines are $15,960 in the contiguous states and DC, $19,950 in Alaska, and $18,360 in Hawaii.",
+  },
+  {
     title: "CMS Marketplace Public Use Files",
     detail: "Benchmark and plan premiums for federally-facilitated Marketplace states.",
   },

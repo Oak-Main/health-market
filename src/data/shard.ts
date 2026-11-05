@@ -171,11 +171,9 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
     if (!shard) {
       return {
         kind: "unavailable",
-        reason: "plan-year-not-published",
-        message:
-          `No benchmark data is built for plan year ${request.planYear}. CMS ` +
-          `publishes plan-year data around October of the preceding year; ` +
-          `PY2027 files were not available as of 2026-07-27.`,
+        reason: "dataset-not-loaded",
+        message: `A verified ${request.planYear} benchmark premium for ZIP ${zip} is unavailable here. ` +
+          "Check the federal income range or get a local quote from your Marketplace.",
       };
     }
 
@@ -208,7 +206,7 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       fips = candidates[0]!;
     }
 
-    const county = shard.counties[fips];
+    const county = candidates.includes(fips) ? shard.counties[fips] : undefined;
     if (!county) {
       return {
         kind: "unavailable",
@@ -217,8 +215,8 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       };
     }
 
-    if (!usesFederalData(county.stateCode)) {
-      const marketplace = lookupMarketplace(county.stateCode);
+    if (!usesFederalData(county.stateCode, request.planYear)) {
+      const marketplace = lookupMarketplace(county.stateCode, request.planYear);
       return {
         kind: "unavailable",
         reason: "state-based-exchange",
@@ -283,6 +281,7 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       slcspPlanId: county.slcspPlanId,
       sourceFile: shard.sourceFile,
       sourcePublished: shard.sourcePublished,
+      generated: shard.generated,
     };
   }
 }

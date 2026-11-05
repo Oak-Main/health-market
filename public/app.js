@@ -52,10 +52,9 @@ function renderUnavailable(u) {
           : "",
       );
     case "plan-year-not-published":
-      return notice(
-        "That plan year isn't published yet",
-        `${esc(u.message)} Insurers file proposed rates in July, state regulators finalise them over the summer, and CMS publishes the plan data in the autumn. Try the current plan year in the meantime.`,
-      );
+    case "dataset-not-loaded":
+      return notice("Local premium unavailable", esc(u.message),
+        '<p><a href="https://www.healthcare.gov/marketplace-in-your-state/">Find your Marketplace</a></p>');
     case "unknown-zip":
       return notice("We don't recognise that ZIP code", esc(u.message));
     default:
@@ -74,7 +73,9 @@ function renderResult(d) {
   const tone = over ? "over" : cliff.cliffIsLive ? "live" : "";
 
   let headline;
-  if (over) {
+  if (ptc.ineligibilityReason === "income-below-minimum") {
+    headline = `<h3>Below the usual federal income range</h3><p>Your Marketplace can check Medicaid and any special eligibility rules that apply to your household.</p>`;
+  } else if (over) {
     headline = `
       <p class="big">${usd(cliff.cliffCost, { cents: true })} a year.</p>
       <p>That is what you are currently giving up. Your income is
@@ -112,7 +113,7 @@ function renderResult(d) {
     <div class="headline ${tone ? `headline--${tone}` : ""}">${headline}</div>
     <dl class="grid">
       <div class="cell"><dt>Benchmark plan</dt><dd>${usd(benchmark.monthlySlcsp)}<span class="hint">/mo</span></dd></div>
-      <div class="cell"><dt>You'd pay</dt><dd>${usd(ptc.monthlyRequiredContribution)}<span class="hint">/mo</span></dd></div>
+      <div class="cell"><dt>Benchmark after estimated credit</dt><dd>${usd(benchmark.monthlySlcsp - ptc.monthlyPtc, { cents: true })}<span class="hint">/mo</span></dd></div>
       <div class="cell"><dt>Estimated credit</dt><dd>${usd(ptc.monthlyPtc)}<span class="hint">/mo</span></dd></div>
       <div class="cell"><dt>% of poverty line</dt><dd>${ptc.fpl.form8962Percent > 400 ? "over 400" : ptc.fpl.form8962Percent}%</dd></div>
       <div class="cell"><dt>Your share of income</dt><dd>${(ptc.applicablePercentage / 100).toFixed(2)}%</dd></div>
@@ -137,15 +138,40 @@ function renderProvenance(d) {
   if (p.benchmarkSource) bits.push(`Premiums: ${esc(p.benchmarkSource)}.`);
   if (oe.endIsContested) {
     bits.push(
-      `Open enrolment for this plan year opens ${esc(oe.start)}; the closing date is <strong>currently contested in litigation</strong> and is not settled.`,
+      `HealthCare.gov lists ${esc(oe.start)} through ${esc(oe.end)}. <a href="#oe">See coverage dates and the appeal status</a>.`,
     );
   }
   $("prov").innerHTML = bits.join(" ");
 }
 
+function renderIncomeCheck(data) {
+  const range = `${usd(data.minimumIncome)} to ${usd(data.maximumIncome)}`;
+  const lead = { within: "within", below: "below", above: "above" }[data.incomeStatus];
+  const details = [];
+  if (data.annualRequiredContribution !== null) {
+    details.push(`The benchmark contribution in the federal formula is ${usd(data.annualRequiredContribution, { cents: true })} per year (${(data.applicablePercentage / 100).toFixed(2)}% of income).`);
+  }
+  if (data.estimatedMonthlyBenchmarkCredit !== null) {
+    details.push(`Using the monthly benchmark you entered, the estimated credit toward that benchmark is ${usd(data.estimatedMonthlyBenchmarkCredit, { cents: true })} per month. Your enrolled plan’s qualifying premium can limit the actual credit.`);
+  }
+  if (data.incomeStatus === "below") details.push("This is below the usual income floor. Your Marketplace can check Medicaid and any special rules that apply.");
+  if (data.incomeStatus === "above") details.push("The estimated federal premium tax credit is $0 above this ceiling.");
+  return notice(`Your income is ${lead} the ${data.planYear} federal income range`,
+    `For this household, the range is ${range}, including both endpoints. ${details.join(" ")}`);
+}
+
 async function submit(event) {
   event?.preventDefault();
   err.textContent = "";
+  const incomeOnly = event?.submitter?.id === "check-limits";
+  if (incomeOnly && (!$("region").value || !$("income").value.trim() || !$("householdSize").value.trim())) {
+    err.textContent = "Choose your location and enter your household size and annual income.";
+    out.replaceChildren();
+    $("prov").replaceChildren();
+    return;
+  }
+  $("check-limits").disabled = true;
+  $("prov").replaceChildren();
   go.disabled = true;
   go.textContent = "Calculating…";
 
@@ -164,21 +190,28 @@ async function submit(event) {
   };
 
   try {
-    const response = await fetch("/api/estimate", {
+    const incomeBody = {
+      planYear: body.planYear, region: $("region").value, income: body.income, householdSize: body.householdSize,
+      ...($("monthlyBenchmark").value ? { monthlyBenchmark: Number($("monthlyBenchmark").value) } : {}),
+    };
+    const response = await fetch(incomeOnly ? "/api/income-check" : "/api/estimate", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(incomeOnly ? incomeBody : body),
     });
     const data = await response.json();
 
     if (data.error === "validation_failed") {
       err.textContent = data.problems.map((p) => `${p.field}: ${p.message}`).join(" · ");
       out.innerHTML = "";
+    } else if (data.ok && incomeOnly) {
+      out.innerHTML = renderIncomeCheck(data);
     } else if (data.ok) {
       out.innerHTML = renderResult(data);
       renderProvenance(data);
     } else if (data.unavailable) {
       out.innerHTML = renderUnavailable(data.unavailable);
+      if (data.unavailable.reason === "dataset-not-loaded") $("income-check").open = true;
       renderProvenance(data);
     } else {
       err.textContent = data.message ?? "Something went wrong.";
@@ -187,6 +220,7 @@ async function submit(event) {
   } catch (error) {
     err.textContent = `Could not reach the estimator: ${error.message}`;
   } finally {
+    $("check-limits").disabled = false;
     go.disabled = false;
     go.textContent = "Find my dropoff point";
   }

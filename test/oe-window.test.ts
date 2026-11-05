@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
+import oe from "../public/oe-window.json";
+import { getPlanYear } from "../src/core/plan-years.js";
 
 // The Open Enrollment panel is dated consumer guidance during the ACA OE
 // window, so the rendered strings, the machine-readable spine and the accuracy
@@ -10,27 +12,6 @@ const read = (p: string): string => readFileSync(new URL(`../${p}`, import.meta.
 const flat = (s: string): string => s.replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 const html = flat(read("public/index.html"));
 const accuracy = flat(read("ACCURACY.md"));
-const oe = JSON.parse(read("public/oe-window.json")) as {
-  planYear: number;
-  window: { starts: string; ends: string };
-  januaryCoverageDeadline: string;
-  asOf: string;
-  primarySource: string;
-  ruleStatus: string;
-  stateNote: string;
-  subsidyStatus: {
-    asOf: string;
-    enhancedCreditsLapsedOn: string;
-    extensionEnacted: boolean;
-    maxFplPercent: number;
-    appliesToPlanYears: number[];
-    primarySources: string[];
-    basis: string;
-    congressRecord: string;
-  };
-  nextReview: string;
-};
-
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
   "August", "September", "October", "November", "December"];
 
@@ -45,7 +26,7 @@ const renderedMonth = (iso: string): string => {
   return `${MONTHS[Number(m) - 1]} ${y}`;
 };
 
-describe("Open Enrollment panel (2026-11-04 pass)", () => {
+describe("2027 federal open enrollment", () => {
   it("renders the JSON window and January-coverage deadline in the page", () => {
     expect(html).toContain(rendered(oe.window.starts));
     expect(html).toContain(rendered(oe.window.ends));
@@ -55,13 +36,34 @@ describe("Open Enrollment panel (2026-11-04 pass)", () => {
 
   it("carries the primary source link and the asOf verification stamp", () => {
     expect(html).toContain(`href="${oe.primarySource}"`);
-    expect(html).toContain(`Verified against HealthCare.gov on ${oe.asOf}`);
+    expect(html).toContain(`datetime="${oe.asOf}"`);
   });
 
-  it("states the enjoined-rule caveat and the state-marketplace caveat", () => {
-    expect(html).toMatch(/court has paused the rule that would shorten this window/);
-    expect(html).toMatch(/appeal/);
-    expect(html).toMatch(/State-run Marketplaces set their own dates/);
+  it("publishes the same dated ruling, coverage, and state guidance in the page and register", () => {
+    for (const value of [oe.datesSummary, oe.ruleStatus, oe.stateNote]) {
+      expect(html).toContain(value);
+      expect(accuracy).toContain(value);
+    }
+    expect(html).toContain(`href="${oe.stateSource}"`);
+    expect(oe.datesSummary).toMatch(/pay your first premium/i);
+  });
+
+  it("uses the same public end date and appeal caveat in the estimate API", () => {
+    const info = getPlanYear(2027).openEnrollment;
+    expect(info.start).toBe(oe.window.starts);
+    expect(info.end).toBe(oe.window.ends);
+    expect(info.januaryFirstDeadline).toBe(oe.januaryCoverageDeadline);
+    expect(info.endIsContested).toBe(true);
+    expect(info.note).toContain(oe.ruleStatus);
+  });
+
+  it("matches the search and social metadata to the dated federal record", () => {
+    for (const attr of ['name="description"', 'property="og:description"', 'name="twitter:description"']) {
+      expect(html).toContain(`<meta ${attr} content="${oe.description}">`);
+    }
+    expect(oe.description).toContain("HealthCare.gov");
+    expect(oe.description).toContain(rendered(oe.window.ends));
+    expect(oe.description).toContain("State deadlines may differ");
   });
 
   it("keeps the spine self-consistent and scheduled for re-review", () => {
@@ -75,12 +77,13 @@ describe("Open Enrollment panel (2026-11-04 pass)", () => {
   });
 
   it("records the vacatur and the argued-but-undecided appeal in the spine", () => {
-    // The rendered caveat still says "paused"; the data behind it must carry
-    // the precise posture. See [[COPY: oe-window-litigation]] in ACCURACY.md.
-    expect(oe.ruleStatus).toMatch(/vacated/);
-    expect(oe.ruleStatus).toMatch(/1:25-cv-2114/);
-    expect(oe.ruleStatus).toMatch(/26-1938/);
-    expect(oe.ruleStatus).toMatch(/2026-10-30/);
+    expect(oe.ruleStatus).toContain("vacated");
+    expect(oe.case.districtDocket).toBe("1:25-cv-02114");
+    expect(oe.case.appealDocket).toBe("26-1938");
+    for (const date of [oe.case.districtRulingDate, oe.case.argumentDate, oe.asOf]) {
+      expect(oe.ruleStatus).toContain(rendered(date));
+    }
+    for (const url of Object.values(oe.sources)) expect(accuracy).toContain(url);
   });
 });
 
@@ -118,10 +121,10 @@ describe("Accuracy register covers the rendered claims", () => {
     for (const claim of [
       "enhanced premium tax credits lapsed on 31 December 2025",
       "400% of the federal poverty line",
-      "November 1, 2026 – January 15, 2027",
+      "November 1, 2026 through January 15, 2027",
       "December 15, 2026",
-      "paused the rule that would shorten",
-      "State-run Marketplaces set their own dates",
+      "vacated the provision",
+      oe.stateNote,
     ]) {
       expect(accuracy).toContain(claim);
     }
@@ -134,10 +137,10 @@ describe("Accuracy register covers the rendered claims", () => {
     expect(accuracy).toContain("oe-window.json");
   });
 
-  it("leaves a copy marker for the wording that moved", () => {
-    expect(accuracy).toContain("[[COPY: oe-window-litigation]]");
-    // The subsidy-status wording did not move, so it carries no marker.
-    expect(accuracy).toContain("[[COPY: subsidy-status]]");
-    expect(accuracy).toMatch(/\[\[COPY: subsidy-status\]\][^\n]*not needed/i);
+  it("contains the resolved court wording across the public surfaces", () => {
+    expect(accuracy).not.toContain("[[COPY: oe-window-litigation]]");
+    expect(html + oe.ruleStatus).not.toMatch(/has (?:paused|stayed|enjoined) the rule/i);
+    expect(accuracy).toContain(oe.asOf);
+    expect(accuracy).toContain(oe.case.appealDocket);
   });
 });

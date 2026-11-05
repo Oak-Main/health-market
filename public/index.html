@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Subsidy Dropoff — find the income where your ACA subsidy disappears</title>
-<meta name="description" content="The enhanced premium tax credits lapsed on 31 December 2025. Earning one dollar over 400% of the federal poverty line now destroys your entire subsidy. Find your exact number.">
+<meta name="description" content="Estimate the federal tax credit income cutoff for your household. HealthCare.gov enrollment for 2027 runs November 1, 2026 through January 15, 2027. State deadlines may differ.">
   <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://subsidydropoff.com/">
 <meta property="og:title" content="Subsidy Dropoff">
-<meta property="og:description" content="Find the exact income at which your ACA health-insurance subsidy disappears — and what crossing it costs.">
+<meta property="og:description" content="Estimate the federal tax credit income cutoff for your household. HealthCare.gov enrollment for 2027 runs November 1, 2026 through January 15, 2027. State deadlines may differ.">
+<meta name="twitter:description" content="Estimate the federal tax credit income cutoff for your household. HealthCare.gov enrollment for 2027 runs November 1, 2026 through January 15, 2027. State deadlines may differ.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://subsidydropoff.com/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 11h13v13h6v5H2z' fill='%230e7c7b'/%3E%3C/svg%3E">
@@ -50,16 +51,13 @@
 
   <section id="oe" class="oe-panel">
     <h2>2027 coverage &mdash; Open Enrollment dates</h2>
-    <p class="oe-line">
-      <strong>November&nbsp;1, 2026 &ndash; January&nbsp;15, 2027</strong> on HealthCare.gov.
-      Enroll by <strong>December&nbsp;15, 2026</strong> for coverage starting January&nbsp;1, 2027.
-    </p>
-    <p class="oe-note">
-      A federal court has paused the rule that would shorten this window to December&nbsp;15;
-      that ruling is on appeal, so these dates can change. State-run Marketplaces set their
-      own dates. Verified against HealthCare.gov on 2026-11-04 &mdash;
-      <a href="https://www.healthcare.gov/quick-guide/dates-and-deadlines" rel="noopener">see
-      the official dates and deadlines</a>.
+    <p class="oe-line">For 2027 coverage on HealthCare.gov, open enrollment runs from November 1, 2026 through January 15, 2027. Choose a plan by December 15, 2026 for January 1 coverage. Later selections through January 15 start February 1. Pay your first premium on time for coverage to begin.</p>
+    <p class="oe-note">On June 12, 2026, the U.S. District Court for Maryland vacated the provision that would have shortened open enrollment. The Fourth Circuit heard the government’s appeal on October 30, 2026. Its public opinions list showed no decision in the case when checked on November 5, 2026. A later ruling could change the dates.</p>
+    <p class="oe-note">If your state runs its own enrollment website, its deadlines may differ. Check your state Marketplace. <a href="https://www.healthcare.gov/marketplace-in-your-state/">Find your Marketplace</a>.</p>
+    <p class="oe-note">Checked <time datetime="2026-11-05">November 5, 2026</time>.
+      <a href="https://www.healthcare.gov/quick-guide/dates-and-deadlines/">HealthCare.gov deadlines</a> ·
+      <a href="https://litigationtracker.law.georgetown.edu/wp-content/uploads/2025/07/City-of-Columbus_2026.06.12_ORDER.pdf">Court order</a> ·
+      <a href="https://www.ca4.uscourts.gov/oral-argument/oral-argument-audio-files">Fourth Circuit argument</a>.
     </p>
   </section>
 
@@ -83,7 +81,7 @@
     </div>
     <div class="field">
       <label for="income">Expected income <span class="hint">(annual MAGI)</span></label>
-      <input id="income" name="income" type="number" min="0" step="100" value="80000" required>
+      <input id="income" name="income" type="number" min="0" step="0.01" value="80000" required>
     </div>
     <div class="field field--wide">
       <label for="ages">Ages of people needing coverage <span class="hint">comma separated</span></label>
@@ -92,6 +90,21 @@
     <input type="hidden" id="countyFips" name="countyFips" value="">
     <div class="field field--wide">
       <button id="go" type="submit">Find my dropoff point</button>
+      <details id="income-check">
+        <summary>Check the federal income range without a ZIP quote</summary>
+        <p>Use the plan year, household size and expected income above. This checks income only. Access to Medicaid, Medicare or affordable job-based coverage and other eligibility rules can affect your credit.</p>
+        <label for="region">Where does your tax household live?</label>
+        <select id="region">
+          <option value="">Choose your location</option>
+          <option value="contiguous">48 contiguous states or DC</option>
+          <option value="alaska">Alaska</option>
+          <option value="hawaii">Hawaii</option>
+        </select>
+        <label for="monthlyBenchmark">Monthly benchmark premium, if known ($)</label>
+        <input id="monthlyBenchmark" type="number" min="0.01" step="0.01" aria-describedby="benchmark-hint">
+        <p class="hint" id="benchmark-hint">Optional. Use the second-lowest-cost Silver premium from your Marketplace for the people seeking coverage, before tax credits.</p>
+        <button class="choice" id="check-limits" type="submit">Check income limits</button>
+      </details>
       <p class="err" id="err" role="alert"></p>
     </div>
   </form>

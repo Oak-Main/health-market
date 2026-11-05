@@ -107,10 +107,10 @@ a typed reason, not an estimate:
 
 | Situation | Behaviour |
 |---|---|
-| PY2027 benchmark requested | `plan-year-not-published` (CMS publishes ~Oct 2026) |
+| Local ZIP benchmark unavailable | `dataset-not-loaded`. Use the income check or enter your Marketplace benchmark |
 | ZIP spans several counties | `ambiguous-zip` + the candidate list — never a guess |
 | State runs its own exchange | `state-based-exchange` + a link to the right one |
-| Alaska / Hawaii poverty guidelines | `UnverifiedDataError` → HTTP 503 |
+| Alaska / Hawaii poverty guidelines | Verified regional income ranges and contribution calculations |
 | No silver plan in a county | `null` benchmark — never a substituted metal |
 
 A confidently wrong subsidy is far worse than an honest gap, and with repayment caps
@@ -178,15 +178,14 @@ Non-negotiable build rules:
 
 | Item | Status |
 |---|---|
-| Rev. Proc. 2026-26 brackets | `secondary-concordant` — two independent sources agree; **primary PDF not read** |
-| 2026 poverty guidelines | 1- and 4-person sourced; **per-person increment derived** |
+| Rev. Proc. 2026-26 brackets | Primary-verified, IRS Rev. Proc. 2026-26 §§3.01–3.02 |
+| 2026 poverty guidelines | Primary-verified for all three regions, 91 FR 1797–1798 |
 | Rev. Proc. 2025-25 brackets | `secondary-single` — endpoints corroborated, intermediates are not |
-| Alaska / Hawaii guidelines | **unpopulated** — engine refuses to compute |
-| PY2027 open enrollment end date | **contested** — vacated 2026-06-12 in *City of Columbus v. Kennedy*, on appeal |
+| Alaska / Hawaii guidelines | Primary-verified. One-person 2027 income ceilings are $79,800 / $73,440 |
+| PY2027 open enrollment end date | January 15, 2027 on HealthCare.gov. Appeal argued October 30. See ACCURACY.md for the dated court check. |
 | CMS PUF download URLs | `urlVerified: false` — not reachable from the authoring environment |
 
-The authoring environment had all outbound HTTPS blocked by egress policy, so no primary
-document could be opened directly. **Re-verify every row above before production.** The
+See ACCURACY.md for the primary sources, dates checked, and review triggers. The
 chaining invariant (`validateTableChaining`) and the 51-jurisdiction count assertion are
 in place precisely because transcription from secondary sources is error-prone — the
 latter has already caught one real omission (Oklahoma).

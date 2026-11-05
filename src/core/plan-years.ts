@@ -43,6 +43,7 @@
  * PY2026 and PY2027.
  */
 
+import enrollment from "../../public/oe-window.json";
 import type {
   ApplicablePercentageTable,
   PlanYear,
@@ -129,9 +130,9 @@ const FPL_2026: PovertyGuidelines = {
     hawaii: 1_836_000, // $18,360 — 91 FR 1797
   },
   increment: {
-    contiguous: 568_000, // $5,680 per person over 4 — 91 FR 1798
-    alaska: 710_000, // $7,100 per person over 4 — 91 FR 1798
-    hawaii: 653_000, // $6,530 per person over 4 — 91 FR 1798
+    contiguous: 568_000, // $5,680 per additional person — 91 FR 1798
+    alaska: 710_000, // $7,100 per additional person — 91 FR 1798
+    hawaii: 653_000, // $6,530 per additional person — 91 FR 1798
   },
   provenance: {
     source: "HHS Poverty Guidelines (2026), 91 FR 1797-1798",
@@ -258,22 +259,11 @@ const PY2027: PlanYearParameters = {
   oopMaxFamily: 2_400_000, // $24,000
   excessAptcRepaymentCapped: false,
   openEnrollment: {
-    start: "2026-11-01",
-    januaryFirstDeadline: "2026-12-15",
-    end: null,
-    endIsContested: true,
-    note:
-      "CONTESTED, and the published window itself is verified. HealthCare.gov " +
-      "publishes the 2027 federal open enrollment period as 2026-11-01 through " +
-      "2027-01-15, with 2026-12-15 the deadline for coverage starting " +
-      "2027-01-01; CMS confirmed the same window on 2026-07-27. The 2025 " +
-      "Marketplace Integrity and Affordability final rule (90 FR 27074) added " +
-      "45 CFR 155.410(e)(5), which would have required the window to end no " +
-      "later than 2026-12-15. The District of Maryland vacated that provision " +
-      "on 2026-06-12 in City of Columbus v. Kennedy, No. 1:25-cv-2114 (D. Md.). " +
-      "The government's appeal, 4th Cir. No. 26-1938, was argued 2026-10-30 and " +
-      "is undecided as of 2026-11-04, so the closing date is not settled. Do " +
-      "not hardcode an end date in UI copy.",
+    start: enrollment.window.starts,
+    januaryFirstDeadline: enrollment.januaryCoverageDeadline,
+    end: enrollment.window.ends,
+    endIsContested: enrollment.endIsContested,
+    note: `${enrollment.datesSummary} ${enrollment.ruleStatus} ${enrollment.stateNote}`,
   },
   provenance: {
     source:

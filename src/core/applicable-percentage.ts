@@ -57,7 +57,7 @@ export function applicablePercentage(
   if (!Number.isInteger(fplPercent)) {
     throw new TypeError(
       `applicablePercentage() requires the whole-number Form 8962 line 5 value; ` +
-        `received ${fplPercent}. Round before calling.`,
+        `received ${fplPercent}. Use the Form 8962 line 5 value.`,
     );
   }
 

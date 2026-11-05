@@ -292,13 +292,21 @@ const BY_STATE: ReadonlyMap<string, StateMarketplace> = new Map(
   STATE_MARKETPLACES.map((m) => [m.state, m]),
 );
 
-export function lookupMarketplace(stateCode: string): StateMarketplace | undefined {
-  return BY_STATE.get(stateCode.toUpperCase());
+// CMS Plan Year 2027 Marketplace map and HealthCare.gov's Oregon transition notice.
+export function lookupMarketplace(stateCode: string, planYear = 2026): StateMarketplace | undefined {
+  const entry = BY_STATE.get(stateCode.toUpperCase());
+  if (!entry || planYear !== 2027) return entry;
+  if (entry.state === "OR") {
+    return { ...entry, type: "SBE", url: "https://explorehealthor.gov/",
+      note: "Oregon operates its own enrollment platform for 2027 coverage." };
+  }
+  if (entry.state === "OK") return { ...entry, type: "SBE-FP" };
+  return entry;
 }
 
 /** States whose plan data lives in the federal QHP Landscape / Rate PUFs. */
-export function usesFederalData(stateCode: string): boolean {
-  const m = lookupMarketplace(stateCode);
+export function usesFederalData(stateCode: string, planYear = 2026): boolean {
+  const m = lookupMarketplace(stateCode, planYear);
   return m !== undefined && (m.type === "FFM" || m.type === "SBE-FP");
 }
 

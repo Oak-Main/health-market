@@ -10,6 +10,7 @@ name: Deploy to Cloudflare Pages
 # plan year is the entire data refresh procedure.
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -31,7 +32,6 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   verify:
@@ -46,12 +46,18 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
+      - run: npm run engine:typecheck
+      - run: npm run check:security-floor
       - name: Test
         run: npm test
 
   deploy:
     name: Build data and deploy
     needs: verify
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -62,42 +68,17 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Build benchmark data from CMS public use files
-        id: etl
-        continue-on-error: true
-        # The PY2026 QHP landscape is a 363MB XLSX inside a ZIP; Node 22's
-        # default ~4GB heap on a 7GB runner aborts (exit 134, "Ineffective
-        # mark-compacts near heap limit") ~65s into the parse. The run stays
-        # green only because continue-on-error deploys the committed shards —
-        # which silently starves the weekly CMS refresh (observed 2026-09-29
-        # dispatch: green run, dataGenerated unchanged from 2026-09-28).
+      - name: Build and verify fresh CMS benchmark shards
         env:
-          NODE_OPTIONS: --max-old-space-size=6144
-        run: npm run etl -- --plan-year=${{ github.event.inputs.planYear || '2026' }} --out=public/data
-
-      - name: Report data status
-        id: data-status
+          NODE_OPTIONS: --max-old-space-size=6500
+          PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
         run: |
-          if [ -d public/data ] && [ -n "$(find public/data -name '*.json' -print -quit)" ]; then
-            COUNT=$(find public/data -name '*.json' ! -name 'index.json' | wc -l)
-            echo "::notice::Built $COUNT benchmark shards from CMS."
-            echo "### Benchmark data: $COUNT shards built" >> "$GITHUB_STEP_SUMMARY"
-            echo "shards_empty=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::ETL produced no shards. Deploying anyway — the API will \
-            return an honest 'dataset-not-loaded' rather than an invented premium. \
-            Check whether CMS has published this plan year yet."
-            echo "### Benchmark data: NONE — API will report data unavailable" >> "$GITHUB_STEP_SUMMARY"
-            echo "shards_empty=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Guard against shipping synthetic premiums
-        run: |
-          if grep -rl "SYNTHETIC" public/data 2>/dev/null; then
-            echo "::error::Synthetic fixture data found in the deploy artifact. Refusing to deploy."
-            exit 1
-          fi
-          echo "No synthetic data in the artifact."
+          set -euo pipefail
+          stage=$(mktemp -d "$RUNNER_TEMP/benchmarks.XXXXXX")
+          npm run etl -- "--plan-year=$PLAN_YEAR" "--out=$stage"
+          npm run etl:verify -- "$stage" "$PLAN_YEAR"
+          rm -rf -- public/data
+          mv -- "$stage" public/data
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -110,7 +91,7 @@ jobs:
       # or an empty-shard deploy would otherwise only be visible to someone
       # who happens to check Actions. This is what makes that visible.
       - name: Alert on deploy failure or empty dataset
-        if: failure() || steps.data-status.outputs.shards_empty == 'true'
+        if: failure()
         run: |
           gh issue create \
             --repo "${{ github.repository }}" \

@@ -80,7 +80,7 @@ export default function MethodologyPage() {
                 <p>
                   Those enhancements <strong>lapsed on December 31, 2025</strong>. Congress did not
                   extend them. With the enhancements gone, the pre-2021 structure returns: eligibility
-                  ends at 400% of the federal poverty line, and the gentle 8.5% cap at the top of the
+                  ends above 400% of the federal poverty line, and the gentle 8.5% cap at the top of the
                   income range is replaced by a hard edge.
                 </p>
                 <Callout>
@@ -118,8 +118,8 @@ export default function MethodologyPage() {
                   </li>
                 </ol>
                 <p>
-                  Money is computed in integer cents throughout, and rounded exactly where the IRS
-                  rounds. The applicable-percentage table is stored to the hundredth of a percent.
+                  The calculation checks the exact 400% ceiling first. For incomes at or below it,
+                  Form 8962 drops the fractional part of the poverty percentage. The applicable-percentage table is stored to the hundredth of a percent.
                 </p>
               </Section>
 
@@ -130,7 +130,7 @@ export default function MethodologyPage() {
                   normal phase-out.
                 </p>
                 <p>
-                  At exactly 400%, eligibility ends. The statute reads &ldquo;not more than 400
+                  The income test includes exactly 400%. The statute reads &ldquo;not more than 400
                   percent&rdquo; — so at exactly 400% you remain eligible, and one cent more takes the
                   credit to zero. That discontinuity is the cliff. Its height is simply the credit
                   you were receiving at the edge: the whole thing, gone at once.
@@ -153,15 +153,14 @@ export default function MethodologyPage() {
                 </p>
                 <p>
                   When a ZIP spans more than one county, rating areas can differ, so Subsidy Dropoff asks which
-                  county rather than picking one. When a plan year&apos;s data has not been published,
+                  county rather than picking one. When verified local data is unavailable,
                   or a region&apos;s poverty guidelines are not independently verified, the engine
                   returns an error instead of a confident but wrong number.
                 </p>
                 <Callout tone="approaching">
-                  This particular deployment serves a synthetic benchmark fixture for demonstration.
-                  Its provenance string literally contains the word &ldquo;SYNTHETIC,&rdquo; and it
-                  surfaces on every estimate. The tax arithmetic is exact; the premium amounts are
-                  invented. Real premiums are loaded from CMS via a separate data pipeline.
+                  The income check uses the published poverty guidelines even when a ZIP benchmark is
+                  unavailable. Enter your Marketplace’s monthly benchmark for a conditional credit
+                  estimate, or leave it blank to check your household’s income limits.
                 </Callout>
               </Section>
 

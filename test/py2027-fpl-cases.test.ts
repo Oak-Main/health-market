@@ -187,3 +187,40 @@ describe("plan year 2027 — the cliff is live because the credits lapsed", () =
     expect(overCliff.annualPtc).toBe(0);
   });
 });
+
+describe("2027 regional income limits in dollars and cents", () => {
+  // 91 FR 1798, including the increment for a ninth household member.
+  const figures = [
+    { region: "alaska", table: [19950, 27050, 34150, 41250, 48350, 55450, 62550, 69650, 76750] },
+    { region: "hawaii", table: [18360, 24890, 31420, 37950, 44480, 51010, 57540, 64070, 70600] },
+    { region: "contiguous", table: [15960, 21640, 27320, 33000, 38680, 44360, 50040, 55720, 61400] },
+  ] as const;
+
+  for (const { region, table } of figures) {
+    it(`uses the published ${region} values for households of one through nine`, () => {
+      table.forEach((amount, i) => expect(fplAmount(PY27, i + 1, region)).toBe(USD(amount)));
+    });
+    it(`checks the exact general 100% and 400% limits in ${region}`, () => {
+      const floor = USD(table[0]);
+      const upper = 4 * floor;
+      for (const [annualIncome, line5, eligible] of [
+        [floor - 1, 99, false], [floor, 100, true], [floor + 1, 100, true],
+        [upper - 1, 399, true], [upper, 400, true], [upper + 1, 401, false],
+      ] as const) {
+        const result = computePtc(PY27, household({ region, annualIncome }), BENCHMARK);
+        expect(result.eligible).toBe(eligible);
+        expect(result.fpl.form8962Percent).toBe(line5);
+        expect(result.annualPtc).toBe(eligible ? BENCHMARK - Math.round(annualIncome * (line5 === 100 ? 215 : 1022) / 10000) : 0);
+      }
+    });
+    it(`uses the correct contribution rate on either side of each IRS bracket in ${region}`, () => {
+      const floor = USD(table[0]);
+      for (const [percent, rateBelow, rateAt] of [[133, 215, 323], [150, 424, 430], [200, 673, 678], [250, 862, 866], [300, 1019, 1022]] as const) {
+        const boundary = floor * percent / 100;
+        const at = (annualIncome: number) => computePtc(PY27, household({ region, annualIncome }), BENCHMARK);
+        expect(at(boundary - 1).applicablePercentage).toBe(rateBelow);
+        expect(at(boundary).applicablePercentage).toBe(rateAt);
+      }
+    });
+  }
+});

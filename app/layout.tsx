@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter_Tight, Instrument_Serif, Geist_Mono } from "next/font/google"
+import enrollment from "../public/oe-window.json"
 import "./globals.css"
 
 const interTight = Inter_Tight({
@@ -27,8 +28,7 @@ export const metadata: Metadata = {
     default: "Subsidy Dropoff — Find the dollar that ends your ACA subsidy",
     template: "%s — Subsidy Dropoff",
   },
-  description:
-    "A precision tool that finds the exact income at which your ACA premium tax credit disappears at 400% of the federal poverty line — and what crossing that line costs you. Estimates only. Not affiliated with the U.S. government.",
+  description: enrollment.description,
   keywords: [
     "ACA subsidy cliff",
     "400% federal poverty line",
@@ -38,8 +38,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Subsidy Dropoff — Find the dollar that ends your ACA subsidy",
-    description:
-      "Since the enhanced premium tax credits lapsed on December 31, 2025, one dollar over 400% of the federal poverty line can cost a household its entire subsidy. Subsidy Dropoff finds that exact dollar.",
+    description: enrollment.description,
     type: "website",
     url: "https://subsidydropoff.com",
     siteName: "Subsidy Dropoff",
@@ -48,8 +47,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Subsidy Dropoff — Find the dollar that ends your ACA subsidy",
-    description:
-      "A precise estimate of the income at which your ACA premium tax credit disappears at 400% of the federal poverty line.",
+    description: enrollment.description,
     images: ["/og.png"],
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },

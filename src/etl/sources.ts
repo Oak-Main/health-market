@@ -37,16 +37,18 @@ export interface DatasetSource {
 /**
  * Datasets required to derive the benchmark for federally-facilitated states.
  *
- * NOTE ON PLAN YEAR AVAILABILITY: as of 2026-07-27 the most recent published
- * plan year is 2026. PY2027 files publish around October 2026, after state
- * regulators finalise rates (insurer filings were due 2026-07-15). Requesting
- * PY2027 before then is expected to 404 — that is correct behaviour, not a bug.
+ * The production benchmark pipeline below uses 2026 files. CMS has published
+ * 2027 files, but that year needs its own validated sources and ZIP coverage.
  *
  * 2026-09-28 re-point: CMS retired the Socrata /resource/ API surface on
  * healthdata.gov and data.healthcare.gov (the portals moved to DKAN). Both
  * former Socrata datasets live on the new datafile paths below; the landscape
  * file is now an XLSX inside a ZIP, which fetchText unpacks.
  */
+// CMS Exchange PUF index, PY2026 Rate and Plan Attributes entries, checked 2026-11-05.
+// Update the URLs and their source revision together when CMS revises this plan year.
+export const BENCHMARK_SOURCE_RELEASE = { planYear: 2026, ratePublished: "2026-08-04" } as const;
+
 export const DATASETS = {
   qhpLandscapeIndividualMedical: {
     id: "qhp-landscape-individual-medical",
@@ -184,21 +186,25 @@ async function unzipFirstTable(buffer: Uint8Array, sourceUrl: string): Promise<s
   const files = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
     unzip(buffer, (err, data) => (err ? reject(err) : resolve(data)));
   });
-  const names = Object.keys(files);
-  const csvNames = names.filter((n) => n.toLowerCase().endsWith(".csv"));
-  if (csvNames.length > 0) {
-    const largest = csvNames.sort((a, b) => files[b].length - files[a].length)[0];
-    return new TextDecoder("utf-8").decode(files[largest]);
-  }
-  const xlsxNames = names.filter((n) => /\.xlsx$/i.test(n));
-  if (xlsxNames.length > 0) {
-    const largest = xlsxNames.sort((a, b) => files[b].length - files[a].length)[0];
+  const csv = largestMember(files, /\.csv$/i);
+  if (csv) return new TextDecoder("utf-8").decode(csv);
+
+  const workbook = largestMember(files, /\.xlsx$/i);
+  if (workbook) {
     const inner = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
-      unzip(files[largest], (err, data) => (err ? reject(err) : resolve(data)));
+      unzip(workbook, (err, data) => (err ? reject(err) : resolve(data)));
     });
     return xlsxToCsv(inner, sourceUrl);
   }
-  throw new Error(`ZIP from ${sourceUrl} contains no CSV/XLSX member (found: ${names.join(", ")})`);
+  throw new Error(`ZIP from ${sourceUrl} contains no CSV/XLSX member (found: ${Object.keys(files).join(", ")})`);
+}
+
+function largestMember(parts: Record<string, Uint8Array>, namePattern: RegExp): Uint8Array | undefined {
+  let largest: Uint8Array | undefined;
+  for (const [name, bytes] of Object.entries(parts)) {
+    if (namePattern.test(name) && (!largest || bytes.length > largest.length)) largest = bytes;
+  }
+  return largest;
 }
 
 /** Column letters ("A", "AA") -> 0-based index. */
@@ -227,22 +233,22 @@ function csvQuote(value: string): string {
 function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string {
   // Workbooks can carry a small notes sheet ahead of the data sheet (the
   // PY2026 landscape does); the data sheet is always the largest worksheet.
-  const sheetNames = Object.keys(parts).filter((n) => /^xl\/worksheets\/[^/]+\.xml$/i.test(n));
-  if (sheetNames.length === 0) {
+  const worksheet = largestMember(parts, /^xl\/worksheets\/[^/]+\.xml$/i);
+  if (!worksheet) {
     throw new Error(`XLSX from ${sourceUrl} has no worksheet part (found: ${Object.keys(parts).join(", ")})`);
   }
-  const sheetName = sheetNames.sort((a, b) => parts[b].length - parts[a].length)[0];
+  // Each indexed capture below is mandatory in its matching expression. Empty tags capture "".
   const shared: string[] = [];
   const sharedXml = parts["xl/sharedStrings.xml"];
   if (sharedXml) {
     const xml = new TextDecoder("utf-8").decode(sharedXml);
     for (const si of xml.matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)) {
       shared.push(
-        Array.from(si[1].matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g), (t) => decodeXml(t[1])).join(""),
+        Array.from(si[1]!.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g), (t) => decodeXml(t[1]!)).join(""),
       );
     }
   }
-  const sheet = new TextDecoder("utf-8").decode(parts[sheetName]);
+  const sheet = new TextDecoder("utf-8").decode(worksheet);
   const rows: string[] = [];
   // exec-loop rather than matchAll: the data sheet can be hundreds of MB and
   // matchAll would materialise every row substring at once.
@@ -252,21 +258,21 @@ function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string
     const cells: string[] = [];
     const cellRe = /<c(\s[^>]*)?>([\s\S]*?)<\/c>/g;
     let cellMatch: RegExpExecArray | null;
-    while ((cellMatch = cellRe.exec(rowMatch[1])) !== null) {
+    while ((cellMatch = cellRe.exec(rowMatch[1]!)) !== null) {
       const attrs = cellMatch[1] ?? "";
-      const body = cellMatch[2];
+      const body = cellMatch[2]!;
       const refMatch = /r="([A-Z]+)\d+"/.exec(attrs);
-      const idx = refMatch ? colIndex(refMatch[1]) : cells.length;
+      const idx = refMatch ? colIndex(refMatch[1]!) : cells.length;
       const type = /t="([^"]+)"/.exec(attrs)?.[1];
       let value = "";
       if (type === "s") {
         const v = /<v>([\s\S]*?)<\/v>/.exec(body);
         value = v ? (shared[Number(v[1])] ?? "") : "";
       } else if (type === "inlineStr") {
-        value = Array.from(body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g), (t) => decodeXml(t[1])).join("");
+        value = Array.from(body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g), (t) => decodeXml(t[1]!)).join("");
       } else {
         const v = /<v>([\s\S]*?)<\/v>/.exec(body);
-        value = v ? decodeXml(v[1]) : "";
+        value = v ? decodeXml(v[1]!) : "";
       }
       while (cells.length < idx) cells.push("");
       cells[idx] = value ?? "";

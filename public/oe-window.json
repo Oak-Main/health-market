@@ -1,18 +1,24 @@
 {
   "planYear": 2027,
-  "window": { "starts": "2026-11-01", "ends": "2027-01-15" },
+  "window": {
+    "starts": "2026-11-01",
+    "ends": "2027-01-15"
+  },
   "januaryCoverageDeadline": "2026-12-15",
-  "operator": "HealthCare.gov (federally run Marketplace)",
-  "asOf": "2026-11-04",
-  "primarySource": "https://www.healthcare.gov/quick-guide/dates-and-deadlines",
-  "ruleStatus": "The provision that would shorten this window to December 15 — 45 CFR 155.410(e)(5), added by the 2025 Marketplace Integrity and Affordability final rule (90 FR 27074) — was vacated by the U.S. District Court for the District of Maryland on 2026-06-12 in City of Columbus v. Kennedy, No. 1:25-cv-2114. The window therefore stands at November 1 through January 15. The government's appeal, 4th Cir. No. 26-1938, was argued 2026-10-30 and is undecided, so the dates can change.",
-  "stateNote": "State-based Marketplaces set their own enrollment dates, which can differ from HealthCare.gov.",
+  "operator": "HealthCare.gov (federal enrollment platform)",
+  "asOf": "2026-11-05",
+  "primarySource": "https://www.healthcare.gov/quick-guide/dates-and-deadlines/",
+  "ruleStatus": "On June 12, 2026, the U.S. District Court for Maryland vacated the provision that would have shortened open enrollment. The Fourth Circuit heard the government’s appeal on October 30, 2026. Its public opinions list showed no decision in the case when checked on November 5, 2026. A later ruling could change the dates.",
+  "stateNote": "If your state runs its own enrollment website, its deadlines may differ. Check your state Marketplace.",
   "subsidyStatus": {
     "asOf": "2026-11-04",
     "enhancedCreditsLapsedOn": "2025-12-31",
     "extensionEnacted": false,
     "maxFplPercent": 400,
-    "appliesToPlanYears": [2026, 2027],
+    "appliesToPlanYears": [
+      2026,
+      2027
+    ],
     "primarySources": [
       "https://www.congress.gov/bill/119th-congress/house-bill/1834/all-actions",
       "https://www.congress.gov/bill/119th-congress/house-bill/5145/all-actions",
@@ -21,5 +27,28 @@
     "basis": "IRC 36B(c)(1)(E) suspends the 400%-of-FPL cap only for taxable years beginning before 2026-01-01. IRS Rev. Proc. 2026-26 section 3.01 publishes a 2027 applicable percentage table whose final bracket ends at 400% of FPL, so the pre-ARPA schedule and the 400% cliff govern plan year 2027.",
     "congressRecord": "H.R. 1834 (House-passed 3-year extension, 230-196 on 2026-01-08) sits on the Senate calendar with no floor action; H.R. 5145 remains 'Introduced', its only action being referral to the House Committee on Ways and Means."
   },
-  "nextReview": "2026-12-15"
+  "nextReview": "2026-12-15",
+  "coverageStarts": {
+    "january": "2027-01-01",
+    "february": "2027-02-01"
+  },
+  "endIsContested": true,
+  "datesSummary": "For 2027 coverage on HealthCare.gov, open enrollment runs from November 1, 2026 through January 15, 2027. Choose a plan by December 15, 2026 for January 1 coverage. Later selections through January 15 start February 1. Pay your first premium on time for coverage to begin.",
+  "case": {
+    "name": "City of Columbus v. Kennedy",
+    "districtDocket": "1:25-cv-02114",
+    "districtRuling": "vacated",
+    "districtRulingDate": "2026-06-12",
+    "appealDocket": "26-1938",
+    "argumentDate": "2026-10-30",
+    "appealStatus": "No decision listed in the Fourth Circuit’s public opinions as of 2026-11-05."
+  },
+  "stateSource": "https://www.healthcare.gov/marketplace-in-your-state/",
+  "sources": {
+    "courtOrder": "https://litigationtracker.law.georgetown.edu/wp-content/uploads/2025/07/City-of-Columbus_2026.06.12_ORDER.pdf",
+    "oralArgument": "https://www.ca4.uscourts.gov/oral-argument/oral-argument-audio-files",
+    "courtOpinions": "https://www.ca4.uscourts.gov/opinions/recent-opinions",
+    "cms": "https://www.cms.gov/newsroom/fact-sheets/plan-year-2027-marketplace-plans-prices-fact-sheet-0"
+  },
+  "description": "Estimate the federal tax credit income cutoff for your household. HealthCare.gov enrollment for 2027 runs November 1, 2026 through January 15, 2027. State deadlines may differ."
 }

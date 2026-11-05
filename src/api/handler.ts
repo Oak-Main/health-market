@@ -24,7 +24,8 @@ import {
   UnsupportedPlanYearError,
   UnverifiedDataError,
 } from "../core/plan-years";
-import { computePtc } from "../core/ptc";
+import { cliffIncomeFor, computeFpl } from "../core/fpl";
+import { computePtc, monthlyFromAnnual, requiredContributionAt } from "../core/ptc";
 import { regionForState } from "../data/shard";
 import type { Cents, Household, HouseholdMember, PlanYear } from "../core/types";
 
@@ -224,10 +225,14 @@ export async function estimate(
     };
   }
 
-  const ageDays = (Date.now() - new Date(benchmark.sourcePublished).getTime()) / 86_400_000;
+  const builtAt = benchmark.generated ?? benchmark.sourcePublished;
+  const ageDays = (Date.now() - Date.parse(builtAt)) / 86_400_000;
+  if (!Number.isFinite(ageDays) || ageDays < 0) {
+    throw new UnverifiedDataError("The benchmark has an invalid refresh date.");
+  }
   if (ageDays > STALE_AFTER_DAYS) {
     throw new UnverifiedDataError(
-      `Benchmark data for this region was last built ${benchmark.sourcePublished} ` +
+      `Benchmark data for this region was last built ${builtAt} ` +
         `(${Math.floor(ageDays)} days ago), exceeding the ${STALE_AFTER_DAYS}-day ` +
         `staleness threshold. The weekly refresh pipeline may be broken — see /api/health.`,
     );
@@ -244,7 +249,7 @@ export async function estimate(
 
   const ptc = computePtc(params, household, annualBenchmark);
   const cliff = analyzeCliff(params, household, annualBenchmark);
-  const csr = determineCsr(ptc.fpl.form8962Percent, true);
+  const csr = determineCsr(ptc.fpl.exactRatio * 100, true);
 
   const affordability = request.employerCoverage
     ? assessAffordability(params, {
@@ -299,12 +304,59 @@ function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body, null, 2), { status, headers: JSON_HEADERS });
 }
 
+/** Income and contribution are computable without a local benchmark premium. */
+async function incomeCheck(request: Request): Promise<Response> {
+  if (request.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
+  let input: unknown;
+  try {
+    input = await request.json();
+  } catch {
+    return json({ ok: false, error: "invalid_json" }, 400);
+  }
+  const { planYear, region, householdSize, income, monthlyBenchmark } = (input ?? {}) as Record<string, unknown>;
+  if (typeof planYear !== "number" || !SUPPORTED_PLAN_YEARS.includes(planYear) ||
+      (region !== "alaska" && region !== "hawaii" && region !== "contiguous") ||
+      typeof householdSize !== "number" || !Number.isInteger(householdSize) || householdSize < 1 || householdSize > MAX_HOUSEHOLD ||
+      typeof income !== "number" || !Number.isFinite(income) || income < 0 || income > MAX_INCOME || Number(income.toFixed(2)) !== income ||
+      (monthlyBenchmark !== undefined &&
+        (typeof monthlyBenchmark !== "number" || !Number.isFinite(monthlyBenchmark) || monthlyBenchmark <= 0 || monthlyBenchmark > MAX_INCOME || Number(monthlyBenchmark.toFixed(2)) !== monthlyBenchmark))) {
+    return json({ ok: false, error: "invalid_income_check",
+      message: "Enter a supported plan year, region, household size and annual income. Any monthly benchmark must be greater than zero." }, 400);
+  }
+
+  const params = getPlanYear(planYear);
+  const incomeCents = toCents(income);
+  const fpl = computeFpl(params, incomeCents, householdSize, region);
+  const upper = cliffIncomeFor(params, householdSize, region);
+  const above = upper !== null && incomeCents > upper;
+  const below = fpl.form8962Percent < params.minFplPercent;
+  const contribution = requiredContributionAt(params, incomeCents, householdSize, region);
+  const benchmark = monthlyBenchmark === undefined ? null : toCents(monthlyBenchmark);
+  // A benchmark supplied by the user belongs to the coverage household. The
+  // actual credit is also limited by the enrolled plan's qualifying premium.
+  const benchmarkCredit = benchmark === null ? null : contribution === null ? 0 :
+    monthlyFromAnnual(Math.max(0, benchmark * 12 - contribution.annual));
+  return json({
+    ok: true, planYear, region, householdSize, fpl,
+    minimumIncome: fpl.fplAmount * params.minFplPercent / 100, maximumIncome: upper,
+    incomeStatus: above ? "above" : below ? "below" : "within",
+    applicablePercentage: contribution?.centiPercent ?? null,
+    annualRequiredContribution: contribution?.annual ?? null,
+    suppliedMonthlyBenchmark: benchmark, estimatedMonthlyBenchmarkCredit: benchmarkCredit,
+    povertySource: params.povertyGuidelines.provenance.url,
+    rateSource: params.applicablePercentageTable.provenance.url,
+    disclaimer: DISCLAIMER,
+  }, 200);
+}
+
 /** WHATWG adapter. Works unchanged on Cloudflare Pages Functions and Node. */
 export async function handleRequest(
   request: Request,
   provider: BenchmarkProvider,
 ): Promise<Response> {
   const url = new URL(request.url);
+
+  if (url.pathname === "/api/income-check") return incomeCheck(request);
 
   if (url.pathname === "/api/health") {
     // Report freshness for the most recent supported plan year with data,
@@ -330,7 +382,7 @@ export async function handleRequest(
         dataAgeDays: ageDays === null ? null : Math.floor(ageDays),
         // true whenever there is no dataset to report on at all, matching
         // estimate()'s STALE_AFTER_DAYS threshold when there is one.
-        dataStale: ageDays === null ? true : ageDays > STALE_AFTER_DAYS,
+        dataStale: ageDays === null || !Number.isFinite(ageDays) || ageDays < 0 || ageDays > STALE_AFTER_DAYS,
       },
       200,
     );

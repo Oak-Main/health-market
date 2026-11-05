@@ -238,19 +238,19 @@ describe("worked premium tax credit examples (plan year 2027)", () => {
     expect(overCliff.ineligibilityReason).toBe("income-above-400-percent");
   });
 
-  it("GF#9: single at $40,000 -> 251% FPL -> 8.69% -> $289.67/mo contribution", () => {
+  it("GF#9: single at $40,000 -> 250% on Form 8962 -> 8.66% -> $288.67/mo contribution", () => {
     const benchmarkMonthly = USD(700);
     const result = computePtc(
       PY27,
       household({ annualIncome: USD(40_000) }),
       benchmarkMonthly * 12,
     );
-    expect(result.fpl.form8962Percent).toBe(251);
-    expect(result.applicablePercentage).toBe(869);
-    expect(result.annualRequiredContribution).toBe(USD(3_476));
-    expect(result.monthlyRequiredContribution).toBe(28_967);
-    expect(result.annualPtc).toBe(USD(4_924));
-    expect(result.monthlyPtc).toBe(41_033);
+    expect(result.fpl.form8962Percent).toBe(250);
+    expect(result.applicablePercentage).toBe(866);
+    expect(result.annualRequiredContribution).toBe(USD(3_464));
+    expect(result.monthlyRequiredContribution).toBe(28_867);
+    expect(result.annualPtc).toBe(USD(4_936));
+    expect(result.monthlyPtc).toBe(41_133);
   });
 
   it("GF#10: single at exactly 150% FPL enters the next band at 4.30%", () => {
@@ -531,9 +531,9 @@ describe("plan year parameters", () => {
   });
 
   it("flags the PY2027 open-enrollment end date as contested", () => {
-    expect(PY27.openEnrollment.end).toBeNull();
+    expect(PY27.openEnrollment.end).toBe("2027-01-15");
     expect(PY27.openEnrollment.endIsContested).toBe(true);
-    expect(PY27.openEnrollment.note).toMatch(/City of Columbus/);
+    expect(PY27.openEnrollment.note).toMatch(/vacated/);
     expect(PY26.openEnrollment.endIsContested).toBe(false);
   });
 

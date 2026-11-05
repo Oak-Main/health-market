@@ -18,7 +18,7 @@
     "engine:typecheck": "tsc -p tsconfig.engine.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "benchmarks:prepare": "bash scripts/prepare-benchmarks.sh",
+    "benchmarks:prepare": "node scripts/prepare-benchmarks.mjs",
     "etl": "tsx src/etl/run.ts",
     "etl:verify": "tsx src/etl/verify.ts",
     "dev:engine": "tsx src/dev-server.ts",

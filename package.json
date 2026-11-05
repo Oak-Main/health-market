@@ -23,6 +23,7 @@
     "etl:verify": "tsx src/etl/verify.ts",
     "dev:engine": "tsx src/dev-server.ts",
     "check:security-floor": "node scripts/check-security-floor.mjs",
+    "check:production": "npm run build && npm run smoke:production",
     "smoke:production": "node scripts/smoke-production.mjs"
   },
   "devDependencies": {

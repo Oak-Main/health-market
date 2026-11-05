@@ -58,6 +58,11 @@ jobs:
       - run: npm run check:security-floor
       - name: Test
         run: npm test
+      - name: Verify the production build and HTTP responses before merge
+        if: github.event_name == 'pull_request'
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run check:production
 
   deploy:
     name: Build data and deploy
@@ -78,11 +83,12 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Build and verify fresh CMS benchmark shards
+      - name: Build with verified fresh CMS data and smoke-test before publication
         env:
           NODE_OPTIONS: --max-old-space-size=6500
           PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
-        run: npm run benchmarks:prepare
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run check:production
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

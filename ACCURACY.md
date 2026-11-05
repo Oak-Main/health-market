@@ -49,8 +49,8 @@ The federal income test is one part of eligibility. IRS Form 8962 Worksheet 2 co
   on Ways and Means. No extension has become law.
 - **Litigation**: the District of Maryland vacated the shortened-window changes to 45 CFR 155.410(e) and (f) on
   2026-06-12 (City of Columbus v. Kennedy, No. 1:25-cv-2114); the
-  government's appeal was argued 2026-10-30 (4th Cir. No. 26-1938) and is
-  undecided as of 2026-11-04.
+  government's appeal was argued 2026-10-30 (4th Cir. No. 26-1938). The
+  follow-up check on 2026-11-05 found no decision on the court’s public opinions list.
 
 ### What did not change on this pass
 

@@ -194,10 +194,12 @@ async function main(): Promise<void> {
   if (outcome.shards.size === 0 || outcome.countiesBuilt === 0) {
     throw new Error("ETL produced no usable benchmark dataset.");
   }
+  const invalidShards: string[] = [];
   for (const [prefix, shard] of outcome.shards) {
     const problems = validateShard(shard);
-    if (problems.length) throw new Error(`Invalid shard ${prefix}: ${problems.slice(0, 3).join("; ")}`);
+    if (problems.length) invalidShards.push(`${prefix}: ${problems.join("; ")}`);
   }
+  if (invalidShards.length) throw new Error(`Invalid benchmark shards:\n${invalidShards.join("\n")}`);
   const dir = join(args.outDir, String(args.planYear));
   await mkdir(dir, { recursive: true });
   const writtenPrefixes = [...outcome.shards.keys()].sort();

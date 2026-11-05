@@ -23,6 +23,7 @@ const actual = (await readdir(dir)).filter(p => p !== "index.json").sort();
 const expected = prefixes.map(p => p + ".json").sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("Manifest and shard files differ");
 const loader = new FileShardLoader(root);
+const coveredCounties = new Set<string>();
 for (const prefix of prefixes) {
   const shard = await loader.load(year, prefix);
   if (!shard || shard.sourceFile !== DATASETS.ratePuf.id + " + " + DATASETS.qhpLandscapeIndividualMedical.id ||
@@ -30,5 +31,11 @@ for (const prefix of prefixes) {
       !Object.keys(shard.zipToCounties).length || Object.keys(shard.zipToCounties).some(zip => !zip.startsWith(prefix) || zip === "00000")) {
     throw new Error("Invalid production shard " + prefix);
   }
+  for (const fipsList of Object.values(shard.zipToCounties)) {
+    for (const fips of fipsList) coveredCounties.add(fips);
+  }
+}
+if (coveredCounties.size < BENCHMARK_SOURCE_RELEASE.minimumCounties) {
+  throw new Error(`Only ${coveredCounties.size} counties are reachable through ZIP codes in the staged release.`);
 }
 console.log("Verified " + prefixes.length + " benchmark shards for " + year);

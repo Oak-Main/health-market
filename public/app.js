@@ -230,7 +230,7 @@ form.addEventListener("submit", submit);
 $("income-check").addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.isComposing && event.target.matches("input")) {
     event.preventDefault();
-    form.requestSubmit($("check-limits"));
+    if (!$("check-limits").disabled) form.requestSubmit($("check-limits"));
   }
 });
 

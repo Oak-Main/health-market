@@ -36,10 +36,12 @@ export interface DatasetSource {
 
 // CMS dates the 2026 Rate and Plan Attributes PUF revisions August 4, 2026:
 // https://www.cms.gov/marketplace/resources/data/public-use-files (PY2026, checked November 5).
-// A clean build on that date of verification produced 1,918 counties. Require review
-// before replacing the release with fewer than 1,700 or with more than 10% skipped.
+// The November 5 cold run found 2,055 landscape counties and 1,873 reachable by ZIP.
+// The release gate requires at least 1,700 reachable counties and 90% source coverage.
 // Update the year-specific download URLs and their source revision together.
-export const BENCHMARK_SOURCE_RELEASE = { planYear: 2026, ratePublished: "2026-08-04", minimumCounties: 1700 } as const;
+export const BENCHMARK_SOURCE_RELEASE = {
+  planYear: 2026, ratePublished: "2026-08-04", minimumCounties: 1700, minimumSourceShare: 0.9,
+} as const;
 
 /**
  * Datasets required to derive the benchmark for federally-facilitated states.

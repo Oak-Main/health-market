@@ -382,6 +382,8 @@ describe("PTC curve", () => {
     expect(overIdx).toBe(atIdx + 1);
     expect(curve[atIdx]!.annualPtc).toBeGreaterThan(0);
     expect(curve[overIdx]!.annualPtc).toBe(0);
+    expect(curve[atIdx]!.form8962Percent).toBe(400);
+    expect(curve[overIdx]!.form8962Percent).toBe(401);
   });
 
   it("is monotonically non-increasing in the credit", () => {

@@ -56,9 +56,8 @@ import type {
  * Verification stamps, one per source.
  *
  * A stamp moves only when the source was actually re-read from its primary
- * document on that date — never because the file was edited. The 2025
- * guidelines and the 2026 applicable percentage table were NOT re-read on
- * 2026-11-04 and keep their earlier stamp.
+ * document on that date. The November 5 pass rechecked both HHS notices and
+ * the IRS 2027 schedule. The 2026 IRS schedule retains its earlier stamp.
  */
 const CHECKED_2026_07_27 = "2026-07-27";
 const CHECKED_2026_11_05 = "2026-11-05";
@@ -203,7 +202,7 @@ const APT_2027: ApplicablePercentageTable = {
     status: "primary-verified",
     note:
       "Read from the primary PDF (Rev. Proc. 2026-26, 2026-07-21) on " +
-      "2026-11-04. Section 3.01 publishes the 2027 applicable percentage " +
+      "2026-11-05. Section 3.01 publishes the 2027 applicable percentage " +
       "table: 2.15% (under 133%), 3.23%/4.30% (133-150%), 4.30%/6.78% " +
       "(150-200%), 6.78%/8.66% (200-250%), 8.66%/10.22% (250-300%), and " +
       "10.22%/10.22% for 'at least 300% but not more than 400%'. Section " +

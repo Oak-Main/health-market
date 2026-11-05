@@ -128,11 +128,13 @@ async function main(): Promise<void> {
   }
 
   const countyPlans = new Map<string, { meta: CsvRow; plans: NormalisedPlanRate[] }>();
+  const sourceCounties = new Set<string>();
   let unresolved = 0;
 
   for (const row of landscape) {
     const fips = normalizeGeographicCode(row["FIPS County Code"] ?? "");
     const planId = (row["Plan ID (Standard Component)"] ?? row["Plan ID"] ?? "").trim();
+    if (fips) sourceCounties.add(fips);
     if (!fips || !planId) continue;
 
     const candidates = ratesByPlan.get(planId);
@@ -214,6 +216,7 @@ async function main(): Promise<void> {
       generated: new Date().toISOString(),
       shardCount: writtenPrefixes.length,
       shardsFailedValidation: 0,
+      sourceCountyCount: sourceCounties.size,
       countiesBuilt: outcome.countiesBuilt,
       countiesSkipped: outcome.countiesSkipped,
       warnings: outcome.warnings,

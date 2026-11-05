@@ -26,7 +26,7 @@
  * cannot be done without the household's actual local benchmark premium.
  */
 
-import { cliffIncomeFor, incomeAtFplPercent } from "./fpl";
+import { cliffIncomeFor, computeFpl, incomeAtFplPercent } from "./fpl";
 import { centsToUsd, requiredContributionAt } from "./ptc";
 import type {
   Cents,
@@ -219,7 +219,10 @@ export function analyzeCliff(
 
 export interface CurvePoint {
   readonly annualIncome: Cents;
+  /** Whole percentage for the chart axis, including values above 400. */
   readonly fplPercent: number;
+  /** IRS worksheet value, with 401 marking income above four times the guideline. */
+  readonly form8962Percent: number;
   readonly annualPtc: Cents;
   readonly annualRequiredContribution: Cents;
   /** Net annual premium for the benchmark plan after the credit. */
@@ -268,10 +271,11 @@ export function buildPtcCurve(
         0,
         annualBenchmarkPremium - (contribution?.annual ?? annualBenchmarkPremium),
       );
-      const fplAmt = incomeAtFplPercent(params, 100, size, region);
+      const fpl = computeFpl(params, annualIncome, size, region);
       return {
         annualIncome,
-        fplPercent: Math.floor((annualIncome * 100) / fplAmt),
+        fplPercent: Math.floor((annualIncome * 100) / fpl.fplAmount),
+        form8962Percent: fpl.form8962Percent,
         annualPtc,
         annualRequiredContribution: contribution?.annual ?? 0,
         annualNetPremium: annualBenchmarkPremium - annualPtc,

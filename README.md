@@ -140,7 +140,7 @@ npm run etl -- --plan-year=2026 --from-dir=./downloads   # offline
 
 Requires outbound HTTPS to `healthdata.gov`, `data.healthcare.gov`, `download.cms.gov`.
 
-The repository includes a historical 2026 snapshot. The release workflow downloads and verifies current CMS files and serves the resulting shards as static assets. The synthetic fixture in `src/fixtures/` is reserved for tests. CMS has published 2027 files. A year-specific source registry and verified ZIP coverage are required before the automatic local price calculator can serve that year. Use `npm run benchmarks:prepare` before `npm run dev` for fresh local prices.
+The repository includes a historical 2026 snapshot. The release workflow downloads and verifies current CMS files and serves the resulting shards as static assets. The synthetic fixture in `src/fixtures/` is used only for tests and explicitly requested synthetic development runs. CMS has published 2027 files. A year-specific source registry and verified ZIP coverage are required before the automatic local price calculator can serve that year. Use `npm run benchmarks:prepare` before `npm run dev` for fresh local prices.
 
 ---
 

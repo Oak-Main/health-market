@@ -65,6 +65,14 @@ jobs:
       - name: Build benchmark data from CMS public use files
         id: etl
         continue-on-error: true
+        # The PY2026 QHP landscape is a 363MB XLSX inside a ZIP; Node 22's
+        # default ~4GB heap on a 7GB runner aborts (exit 134, "Ineffective
+        # mark-compacts near heap limit") ~65s into the parse. The run stays
+        # green only because continue-on-error deploys the committed shards —
+        # which silently starves the weekly CMS refresh (observed 2026-09-29
+        # dispatch: green run, dataGenerated unchanged from 2026-09-28).
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: npm run etl -- --plan-year=${{ github.event.inputs.planYear || '2026' }} --out=public/data
 
       - name: Report data status

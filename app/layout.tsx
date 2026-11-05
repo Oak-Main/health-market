@@ -52,7 +52,7 @@ export const metadata: Metadata = {
       "A precise estimate of the income at which your ACA premium tax credit disappears at 400% of the federal poverty line.",
     images: ["/og.png"],
   },
-  robots: { index: true, follow: true },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
 }
 
 export const viewport: Viewport = {

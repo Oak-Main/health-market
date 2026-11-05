@@ -182,7 +182,7 @@ Non-negotiable build rules:
 | 2026 poverty guidelines | Primary-verified for all three regions, 91 FR 1797–1798 |
 | Rev. Proc. 2025-25 brackets | `secondary-single` — endpoints corroborated, intermediates are not |
 | Alaska / Hawaii guidelines | Primary-verified. One-person 2027 income ceilings are $79,800 / $73,440 |
-| PY2027 open enrollment end date | January 15, 2027 on HealthCare.gov. Appeal argued October 30. See ACCURACY.md for the dated court check. |
+| PY2027 open enrollment end date | January 15, 2027 on HealthCare.gov. The Fourth Circuit heard the appeal October 30. A later ruling could change the published date. See ACCURACY.md for the dated court check. |
 | CMS PUF download URLs | `urlVerified: false` — not reachable from the authoring environment |
 
 See ACCURACY.md for the primary sources, dates checked, and review triggers. The

@@ -227,6 +227,12 @@ async function submit(event) {
 }
 
 form.addEventListener("submit", submit);
+$("income-check").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.isComposing && event.target.matches("input")) {
+    event.preventDefault();
+    form.requestSubmit($("check-limits"));
+  }
+});
 
 // County disambiguation: re-run the estimate pinned to the chosen county.
 out.addEventListener("click", (event) => {

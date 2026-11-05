@@ -97,6 +97,12 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy public --project-name=subsidy-dropoff --branch=${{ github.event_name == 'schedule' && 'main' || github.ref_name }}
 
+      - name: Verify the published custom domain
+        if: github.ref_name == 'main' || github.event_name == 'schedule'
+        env:
+          PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
+        run: node scripts/verify-published.mjs
+
       # Nothing upstream of this step pages anyone on its own — a failed run
       # or an empty-shard deploy would otherwise only be visible to someone
       # who happens to check Actions. This is what makes that visible.

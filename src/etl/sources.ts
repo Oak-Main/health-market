@@ -34,6 +34,12 @@ export interface DatasetSource {
   readonly urlVerified: boolean;
 }
 
+// CMS dates the 2026 Rate and Plan Attributes PUF revisions August 4, 2026:
+// https://www.cms.gov/marketplace/resources/data/public-use-files (PY2026, checked November 5).
+// A clean build on that date of verification produced 1,918 counties. Require review
+// before replacing the release with fewer than 1,700 or with more than 10% skipped.
+export const BENCHMARK_SOURCE_RELEASE = { planYear: 2026, ratePublished: "2026-08-04", minimumCounties: 1700 } as const;
+
 /**
  * Datasets required to derive the benchmark for federally-facilitated states.
  *
@@ -45,10 +51,6 @@ export interface DatasetSource {
  * former Socrata datasets live on the new datafile paths below; the landscape
  * file is now an XLSX inside a ZIP, which fetchText unpacks.
  */
-// CMS Exchange PUF index, PY2026 Rate and Plan Attributes entries, checked 2026-11-05.
-// Update the URLs and their source revision together when CMS revises this plan year.
-export const BENCHMARK_SOURCE_RELEASE = { planYear: 2026, ratePublished: "2026-08-04" } as const;
-
 export const DATASETS = {
   qhpLandscapeIndividualMedical: {
     id: "qhp-landscape-individual-medical",

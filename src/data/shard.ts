@@ -211,7 +211,7 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       return {
         kind: "unavailable",
         reason: "unknown-zip",
-        message: `County FIPS ${fips} is not in the plan year ${request.planYear} dataset.`,
+        message: `County FIPS ${fips} is unavailable for ZIP ${zip} in plan year ${request.planYear}.`,
       };
     }
 

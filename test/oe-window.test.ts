@@ -67,6 +67,10 @@ describe("2027 federal open enrollment", () => {
     expect(oe.description).toContain(rendered(oe.window.ends));
     expect(oe.description).toContain("State deadlines may differ");
     expect(oe.description).toMatch(/appeal could change/i);
+    const nextPage = read("app/page.tsx");
+    for (const key of ["datesSummary", "ruleStatus", "stateNote", "stateSource"]) {
+      expect(nextPage).toContain(`enrollment.${key}`);
+    }
   });
 
   it("keeps the spine self-consistent and scheduled for re-review", () => {

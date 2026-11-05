@@ -20,6 +20,7 @@ import {
   buildPlanRates,
   buildShards,
   indexPlanAttributes,
+  normalizeGeographicCode,
   resolveRatingArea,
   type CountyInput,
   type CsvRow,
@@ -130,9 +131,9 @@ async function main(): Promise<void> {
   let unresolved = 0;
 
   for (const row of landscape) {
-    const fips = (row["FIPS County Code"] ?? "").trim().padStart(5, "0");
+    const fips = normalizeGeographicCode(row["FIPS County Code"] ?? "");
     const planId = (row["Plan ID (Standard Component)"] ?? row["Plan ID"] ?? "").trim();
-    if (!/^\d{5}$/.test(fips) || fips === "00000" || !planId) continue;
+    if (!fips || !planId) continue;
 
     const candidates = ratesByPlan.get(planId);
     if (!candidates || candidates.length === 0) continue;
@@ -168,9 +169,9 @@ async function main(): Promise<void> {
 
   const zipToCounties: Record<string, string[]> = {};
   for (const row of zipRows) {
-    const zip = (row["zipcode"] ?? row["ZIP Code"] ?? row["Zip Code"] ?? row["zip"] ?? "").trim().padStart(5, "0");
-    const fips = (row["countycode"] ?? row["FIPS"] ?? row["fips"] ?? row["county"] ?? "").trim().padStart(5, "0");
-    if (!/^\d{5}$/.test(zip) || zip === "00000" || !/^\d{5}$/.test(fips) || fips === "00000") continue;
+    const zip = normalizeGeographicCode(row["zipcode"] ?? row["ZIP Code"] ?? row["Zip Code"] ?? row["zip"] ?? "");
+    const fips = normalizeGeographicCode(row["countycode"] ?? row["FIPS"] ?? row["fips"] ?? row["county"] ?? "");
+    if (!zip || !fips) continue;
     (zipToCounties[zip] ??= []).push(fips);
   }
   console.log(`  ${Object.keys(zipToCounties).length} ZIP codes in the crosswalk`);
@@ -190,19 +191,17 @@ async function main(): Promise<void> {
   }
 
   console.log("5/5 Validating and writing");
-  const dir = join(args.outDir, String(args.planYear));
-  await mkdir(dir, { recursive: true });
-
-  let failures = 0;
-  const writtenPrefixes: string[] = [];
+  if (outcome.shards.size === 0 || outcome.countiesBuilt === 0) {
+    throw new Error("ETL produced no usable benchmark dataset.");
+  }
   for (const [prefix, shard] of outcome.shards) {
     const problems = validateShard(shard);
-    if (problems.length > 0) {
-      failures += 1;
-      console.error(`  FAILED ${prefix}: ${problems.slice(0, 3).join("; ")}`);
-      continue;
-    }
-    writtenPrefixes.push(prefix);
+    if (problems.length) throw new Error(`Invalid shard ${prefix}: ${problems.slice(0, 3).join("; ")}`);
+  }
+  const dir = join(args.outDir, String(args.planYear));
+  await mkdir(dir, { recursive: true });
+  const writtenPrefixes = [...outcome.shards.keys()].sort();
+  for (const [prefix, shard] of outcome.shards) {
     await writeFile(join(dir, `${prefix}.json`), JSON.stringify(shard));
   }
 
@@ -212,22 +211,14 @@ async function main(): Promise<void> {
       planYear: args.planYear,
       generated: new Date().toISOString(),
       shardCount: writtenPrefixes.length,
-      shardsFailedValidation: failures,
+      shardsFailedValidation: 0,
       countiesBuilt: outcome.countiesBuilt,
       countiesSkipped: outcome.countiesSkipped,
       warnings: outcome.warnings,
-      prefixes: writtenPrefixes.sort(),
+      prefixes: writtenPrefixes,
     }, null, 2),
   );
 
-  if (writtenPrefixes.length === 0 || outcome.countiesBuilt === 0) {
-    throw new Error("ETL produced no usable benchmark dataset.");
-  }
-  if (failures > 0) {
-    console.error(`\n${failures} shard(s) failed validation and were NOT written.`);
-    process.exitCode = 1;
-    return;
-  }
   console.log(`\nWrote ${writtenPrefixes.length} shards to ${dir}`);
 }
 

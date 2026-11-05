@@ -88,6 +88,7 @@ async function main() {
     }
   };
   process.once("SIGINT", () => { stop().finally(() => process.exit(130)); });
+  process.once("SIGTERM", () => { stop().finally(() => process.exit(143)); });
 
   try {
     // Wait (bounded) for readiness

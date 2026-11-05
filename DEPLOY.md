@@ -3,7 +3,7 @@
 ## Status
 
 Cloudflare Pages serves `subsidydropoff.com` from `main`. A push to the separate
-repository default branch creates a branch preview. Promote a reviewed revision
+repository default branch, `claude/aca-marketplace-subsidy-estimator-xaujqu`, matches the workflow’s `claude/aca-marketplace-subsidy-estimator-**` push trigger and creates a branch preview. Promote a reviewed revision
 to `main` to release it. The existing weekly job checks out `main`, verifies it,
 and refreshes the production data from that exact commit.
 

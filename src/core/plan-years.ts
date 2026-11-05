@@ -1,7 +1,8 @@
 /**
  * Plan-year parameters with full provenance.
  *
- * This file is the single place a legislative or regulatory change lands.
+ * This registry holds the federal tax parameters and imports the dated federal
+ * enrollment record from public/oe-window.json for both API and website use.
  * The engine in ptc.ts / cliff.ts contains no year-specific constants.
  *
  * STATE OF THE LAW AS OF 2026-11-04
@@ -271,7 +272,7 @@ const PY2027: PlanYearParameters = {
     source:
       "Composite — IRS Rev. Proc. 2026-26; 91 FR 1797-1798; HealthCare.gov; Congress.gov",
     url: "https://www.healthcare.gov/quick-guide/dates-and-deadlines",
-    published: "2026-11-01",
+    published: APT_2027.provenance.published,
     checked: CHECKED_2026_11_04,
     status: "primary-verified",
     note:

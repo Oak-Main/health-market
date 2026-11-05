@@ -5,12 +5,18 @@ import {
   checkCompositionInvariance,
   buildPlanRates,
   indexPlanAttributes,
+  normalizeGeographicCode,
   type CountyInput,
   type CsvRow,
 } from "../src/etl/build.js";
 import { parseCsv, parseCsvTable, parseMoneyToCents, parseRatePufAge, CsvError } from "../src/etl/csv.js";
 import { validateShard } from "../src/data/shard.js";
 import type { MetalLevel, NormalisedPlanRate } from "../src/etl/slcsp.js";
+
+it("normalizes geographic codes without admitting a blank, malformed or all-zero ZIP or county", () => {
+  for (const raw of ["", "  ", "0", "00000", "0xy45", "123456"]) expect(normalizeGeographicCode(raw)).toBeNull();
+  expect(normalizeGeographicCode(" 1234 ")).toBe("01234");
+});
 
 const USD = (d: number): number => Math.round(d * 100);
 

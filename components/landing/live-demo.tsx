@@ -21,7 +21,7 @@ export async function LiveDemo() {
     throw error
   })
   if (!response?.ok || !response.result) {
-    return <p className="mx-auto max-w-6xl px-6 py-8">The worked example is unavailable until the Harris County benchmark is verified.</p>
+    return <p className="mx-auto max-w-6xl px-6 py-8">The calculator could not produce a verified estimate for this example.</p>
   }
   const result = response.result as EstimateResult
   const { cliff, ptc } = result

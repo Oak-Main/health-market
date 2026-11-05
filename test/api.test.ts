@@ -73,6 +73,7 @@ describe("state marketplace routing", () => {
     expect(lookupMarketplace("OR", 2027)?.url).toBe("https://explorehealthor.gov/");
     expect(lookupMarketplace("OK", 2027)).toMatchObject({ type: "SBE-FP", url: "https://www.healthcare.gov" });
     expect(usesFederalData("OK", 2027)).toBe(true);
+    expect(marketplaceCounts(2027)).toEqual({ FFM: 27, "SBE-FP": 2, SBE: 22 });
   });
 
   it("flags states with their own premium assistance", () => {

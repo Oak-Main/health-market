@@ -12,7 +12,9 @@ if (year !== BENCHMARK_SOURCE_RELEASE.planYear) throw new Error("Unregistered be
 const dir = join(root, String(year));
 const index = JSON.parse(await readFile(join(dir, "index.json"), "utf8")) as ShardIndex & { shardsFailedValidation: number };
 const prefixes = index.prefixes;
-if (index.planYear !== year || !Number.isInteger(index.countiesBuilt) || index.countiesBuilt < 1 || index.shardsFailedValidation !== 0 ||
+if (index.planYear !== year || !Number.isInteger(index.countiesBuilt) || index.countiesBuilt < BENCHMARK_SOURCE_RELEASE.minimumCounties ||
+    !Number.isInteger(index.countiesSkipped) || index.countiesSkipped < 0 ||
+    index.countiesBuilt < 0.9 * (index.countiesBuilt + index.countiesSkipped) || index.shardsFailedValidation !== 0 ||
     !Array.isArray(prefixes) || !prefixes.length || prefixes.length !== index.shardCount ||
     new Set(prefixes).size !== prefixes.length || !prefixes.every(p => /^\d{3}$/.test(p))) {
   throw new Error("Invalid or empty benchmark manifest");

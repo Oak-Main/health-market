@@ -1,6 +1,6 @@
 # Accuracy register — subsidydropoff.com
 
-This register covers the public enrollment dates, litigation status and federal subsidy income rules. Each row identifies the verification date, primary source and next review.
+This register covers the public enrollment dates, litigation status and federal subsidy income rules. Every rendered claim in that scope needs a row with a verification date, primary source and next review. Publish values only after verifying them.
 
 Machine-readable mirror of the Open Enrollment row: `public/oe-window.json`
 (pinned together with this file and the rendered page by
@@ -48,7 +48,7 @@ The federal income test is one part of eligibility. IRS Form 8962 Worksheet 2 co
   remains "Introduced", its only action being referral to the House Committee
   on Ways and Means. No extension has become law.
 - **Litigation**: the District of Maryland vacated the shortened-window changes to 45 CFR 155.410(e) and (f) on
-  2026-06-12 (City of Columbus v. Kennedy, No. 1:25-cv-2114); the
+  2026-06-12 (City of Columbus v. Kennedy, No. 1:25-cv-02114); the
   government's appeal was argued 2026-10-30 (4th Cir. No. 26-1938). The
   follow-up check on 2026-11-05 found no decision on the court’s public opinions list.
 

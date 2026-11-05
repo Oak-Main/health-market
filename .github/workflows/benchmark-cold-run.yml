@@ -1,0 +1,25 @@
+name: benchmark-cold-run
+on:
+  push:
+    branches: ['verify/benchmark-cold-run-5a4ba4ec']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verification only
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          staging=$(mktemp -d "$RUNNER_TEMP/cms-shards.XXXXXX")
+          NODE_OPTIONS=--max-old-space-size=6500 npm run etl -- --plan-year=2026 --out="$staging"
+          npm run etl:verify -- "$staging" 2026

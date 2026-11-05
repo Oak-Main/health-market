@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run benchmarks:prepare",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -17,6 +18,7 @@
     "engine:typecheck": "tsc -p tsconfig.engine.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "benchmarks:prepare": "bash scripts/prepare-benchmarks.sh",
     "etl": "tsx src/etl/run.ts",
     "etl:verify": "tsx src/etl/verify.ts",
     "dev:engine": "tsx src/dev-server.ts",

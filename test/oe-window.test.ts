@@ -11,7 +11,8 @@ const read = (p: string): string => readFileSync(new URL(`../${p}`, import.meta.
 // The page uses &nbsp; and wraps lines mid-phrase; compare on normalized text.
 const flat = (s: string): string => s.replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
 const html = flat(read("public/index.html"));
-const accuracy = flat(read("ACCURACY.md"));
+const accuracyText = read("ACCURACY.md");
+const accuracy = flat(accuracyText);
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
   "August", "September", "October", "November", "December"];
 
@@ -65,6 +66,7 @@ describe("2027 federal open enrollment", () => {
     expect(oe.description).toContain("HealthCare.gov");
     expect(oe.description).toContain(rendered(oe.window.ends));
     expect(oe.description).toContain("State deadlines may differ");
+    expect(oe.description).toMatch(/appeal could change/i);
   });
 
   it("keeps the spine self-consistent and scheduled for re-review", () => {
@@ -119,19 +121,25 @@ describe("Rule-status line (subsidy status)", () => {
 
 describe("Accuracy register covers the rendered claims", () => {
   it("has a row per claim with a verification date and a primary source", () => {
-    for (const claim of [
-      "enhanced premium tax credits lapsed on 31 December 2025",
-      "400% of the federal poverty line",
-      "November 1, 2026 through January 15, 2027",
-      "December 15, 2026",
-      "vacated the provision",
-      oe.stateNote,
-    ]) {
-      expect(accuracy).toContain(claim);
+    const rows = accuracyText.split("\n").filter(line => /^\| \d+ \|/.test(line));
+    const records = [
+      ["enhanced premium tax credits lapsed on 31 December 2025", oe.subsidyStatus.asOf, "Congress.gov"],
+      ["400% of the federal poverty line", oe.subsidyStatus.asOf, "Rev. Proc. 2026-26"],
+      [oe.datesSummary, oe.asOf, oe.primarySource],
+      [oe.ruleStatus, oe.asOf, oe.sources.courtOrder],
+      [oe.stateNote, oe.asOf, oe.stateSource],
+      ["extensionEnacted", oe.subsidyStatus.asOf, oe.subsidyStatus.primarySources[0]],
+      ["General range of 100% through 400%", oe.asOf, "https://www.govinfo.gov/"],
+      [oe.description, oe.asOf, oe.primarySource],
+    ];
+    for (const [claim, date, source] of records) {
+      const matches = rows.filter(row => row.includes(claim));
+      expect(matches).toHaveLength(1);
+      const columns = matches[0]!.split("|").map(cell => cell.trim());
+      expect(columns[4]).toBe(date);
+      expect(columns[5]).toContain(source);
+      expect(columns[6]).toContain(oe.nextReview);
     }
-    expect(accuracy).toContain("2026-11-04");
-    expect(accuracy).toContain("https://www.healthcare.gov/quick-guide/dates-and-deadlines");
-    expect(accuracy).toContain("2026-12-15");
   });
 
   it("mentions the machine-readable spine so the two stay linked", () => {
@@ -140,7 +148,9 @@ describe("Accuracy register covers the rendered claims", () => {
 
   it("contains the resolved court wording across the public surfaces", () => {
     expect(accuracy).not.toContain("[[COPY: oe-window-litigation]]");
-    expect(html + oe.ruleStatus).not.toMatch(/has (?:paused|stayed|enjoined) the rule/i);
+    const courtRow = accuracyText.split("\n").find(line => line.startsWith("| 4 |"));
+    expect(courtRow).toContain(oe.ruleStatus);
+    expect(`${html} ${oe.ruleStatus} ${courtRow}`).not.toMatch(/\b(?:paus(?:e|es|ed|ing)|stay(?:s|ed|ing)?|enjoin(?:s|ed|ing)?|injunction)\b/i);
     expect(accuracy).toContain(oe.asOf);
     expect(accuracy).toContain(oe.case.appealDocket);
   });

@@ -205,7 +205,7 @@ async function submit(event) {
       err.textContent = data.problems.map((p) => `${p.field}: ${p.message}`).join(" · ");
       out.innerHTML = "";
     } else if (data.ok && incomeOnly) {
-      out.innerHTML = renderIncomeCheck(data);
+      out.innerHTML = `${renderIncomeCheck(data)}<p class="disclaimer">${esc(data.disclaimer)}</p>`;
     } else if (data.ok) {
       out.innerHTML = renderResult(data);
       renderProvenance(data);

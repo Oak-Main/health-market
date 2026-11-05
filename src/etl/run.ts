@@ -8,8 +8,8 @@
  * data.healthcare.gov and download.cms.gov. Shards are committed to the repo
  * and served as static assets, so production never talks to CMS at request time.
  *
- * PLAN YEAR AVAILABILITY: PY2027 files publish around October 2026. Running
- * this for 2027 before then is expected to fail at the fetch step.
+ * Runs only for the registered CMS release. New plan years require their own
+ * reviewed sources before this pipeline will build or label public premiums.
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";

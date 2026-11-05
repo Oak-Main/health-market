@@ -5,7 +5,8 @@ import { FileShardLoader } from "../data/file-loader";
 import type { ShardIndex } from "../data/shard";
 import { BENCHMARK_SOURCE_RELEASE, DATASETS } from "./sources";
 
-const root = process.argv[2] ?? "public/data";
+const root = process.argv[2];
+if (!root) throw new Error("Pass the staged benchmark directory, e.g. npm run etl:verify -- public/data 2026 after benchmarks:prepare");
 const year = Number(process.argv[3] ?? BENCHMARK_SOURCE_RELEASE.planYear);
 if (year !== BENCHMARK_SOURCE_RELEASE.planYear) throw new Error("Unregistered benchmark year");
 const dir = join(root, String(year));

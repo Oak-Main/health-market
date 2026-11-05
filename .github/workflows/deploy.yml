@@ -82,13 +82,7 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=6500
           PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
-        run: |
-          set -euo pipefail
-          stage=$(mktemp -d "$RUNNER_TEMP/benchmarks.XXXXXX")
-          npm run etl -- "--plan-year=$PLAN_YEAR" "--out=$stage"
-          npm run etl:verify -- "$stage" "$PLAN_YEAR"
-          rm -rf -- public/data
-          mv -- "$stage" public/data
+        run: npm run benchmarks:prepare
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

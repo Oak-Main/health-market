@@ -195,3 +195,5 @@ footer p { max-width: 46rem; }
 #income-check[open] { display: grid; gap: 0.5rem; }
 #income-check p { margin: 0.25rem 0; }
 #income-check button { justify-self: start; }
+
+.oe-note + .oe-note { margin-top: 0.5rem; }

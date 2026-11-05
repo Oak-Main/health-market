@@ -225,14 +225,13 @@ export async function estimate(
     };
   }
 
-  const builtAt = benchmark.generated ?? benchmark.sourcePublished;
-  const ageDays = (Date.now() - Date.parse(builtAt)) / 86_400_000;
+  const ageDays = (Date.now() - Date.parse(benchmark.generated)) / 86_400_000;
   if (!Number.isFinite(ageDays) || ageDays < 0) {
     throw new UnverifiedDataError("The benchmark has an invalid refresh date.");
   }
   if (ageDays > STALE_AFTER_DAYS) {
     throw new UnverifiedDataError(
-      `Benchmark data for this region was last built ${builtAt} ` +
+      `Benchmark data for this region was last built ${benchmark.generated} ` +
         `(${Math.floor(ageDays)} days ago), exceeding the ${STALE_AFTER_DAYS}-day ` +
         `staleness threshold. The weekly refresh pipeline may be broken — see /api/health.`,
     );

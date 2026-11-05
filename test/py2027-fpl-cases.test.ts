@@ -112,16 +112,13 @@ describe("plan year 2027 — 399% of FPL", () => {
     expect(result.annualPtc).toBe(USD(20_000) - USD(8_824.32));
   });
 
-  it("sits one dollar below the cliff and keeps the whole credit", () => {
-    // $1 more and the credit is gone. That gap is the product.
-    const atCliff = computePtc(PY27, household({
-      size: 2,
-      members: [adult(60), adult(58)],
-      annualIncome: USD(86_344.6),
+  it("retains the credit up to the two-person cliff and loses it one cent above", () => {
+    const atIncome = (dollars: number) => computePtc(PY27, household({
+      size: 2, members: [adult(60), adult(58)], annualIncome: USD(dollars),
     }), BENCHMARK);
-
-    expect(atCliff.eligible).toBe(true);
-    expect(atCliff.annualPtc).toBeGreaterThan(USD(11_000));
+    expect(atIncome(86_559).eligible).toBe(true);
+    expect(atIncome(86_560).annualPtc).toBeGreaterThan(USD(11_000));
+    expect(atIncome(86_560.01).annualPtc).toBe(0);
   });
 });
 

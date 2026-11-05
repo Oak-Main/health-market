@@ -1,17 +1,11 @@
 # Accuracy register — subsidydropoff.com
 
-Every factual claim this site renders to users is listed here with the value
-shown, the date it was verified, the primary source, and when it must be
-re-verified. A claim without a row here (or past its next review with the page
-unchanged) is a bug. Values are never invented: if a source cannot be checked,
-the page shows no date rather than a guess.
+This register covers the public enrollment dates, litigation status and federal subsidy income rules. Each row identifies the verification date, primary source and next review.
 
 Machine-readable mirror of the Open Enrollment row: `public/oe-window.json`
 (pinned together with this file and the rendered page by
 `test/oe-window.test.ts`). The rule-status line has its own mirror block,
-`subsidyStatus`, in the same file. In the estimate API, `openEnrollment.publishedEnd`
-reports the closing date currently published by HealthCare.gov. While an appeal
-is pending, the legacy `end` field stays null and `endIsContested` carries the caveat.
+`subsidyStatus`, in the same file. In the estimate API, `provenance.openEnrollment.publishedEnd` reports the closing date currently published by HealthCare.gov. While an appeal is pending, `provenance.openEnrollment.end` stays null and `provenance.openEnrollment.endIsContested` is true.
 
 | # | Claim (as rendered) | Value | Verified on | Primary source | Next review | Owner |
 |---|---|---|---|---|---|---|
@@ -22,7 +16,7 @@ is pending, the legacy `end` field stays null and `endIsContested` carries the c
 | 5 | State enrollment websites | If your state runs its own enrollment website, its deadlines may differ. Check your state Marketplace. | 2026-11-05 | https://www.healthcare.gov/marketplace-in-your-state/ | 2026-12-15 | Owner |
 | 6 | Rule-status line: "Rule status as of November 2026: the enhanced credits lapsed 31 December 2025 and Congress has not enacted an extension, so the 400% FPL cap applies to the 2026 and 2027 estimates below." | Lapsed 2025-12-31; `extensionEnacted: false`; 400% cap applies to plan years 2026 and 2027 | 2026-11-04 | https://www.congress.gov/bill/119th-congress/house-bill/1834/all-actions · https://www.congress.gov/bill/119th-congress/house-bill/5145/all-actions · https://www.irs.gov/pub/irs-drop/rp-26-26.pdf | 2026-12-15 | Owner |
 | 7 | Federal income test for 2027 coverage, including Alaska and Hawaii | General range of 100% through 400% of the 2026 HHS guideline for the tax household. One person: contiguous/DC $15,960–$63,840, Alaska $19,950–$79,800, Hawaii $18,360–$73,440. The upper endpoint is included. | 2026-11-05 | https://www.govinfo.gov/content/pkg/FR-2026-01-15/pdf/2026-00755.pdf · https://www.irs.gov/pub/irs-drop/rp-26-26.pdf · https://www.irs.gov/affordable-care-act/individuals-and-families/questions-and-answers-on-the-premium-tax-credit | 2026-12-15 | Owner |
-| 8 | Search and social descriptions | Estimate the federal tax credit income cutoff for your household. HealthCare.gov enrollment for 2027 runs November 1, 2026 through January 15, 2027. State deadlines may differ. | 2026-11-05 | https://www.healthcare.gov/quick-guide/dates-and-deadlines/ · https://www.healthcare.gov/marketplace-in-your-state/ | On a court order or CMS update, and by 2026-12-15 | Owner |
+| 8 | Search and social descriptions | HealthCare.gov lists November 1, 2026 through January 15, 2027 for 2027 enrollment. The pending appeal could change dates. State deadlines may differ. | 2026-11-05 | https://www.healthcare.gov/quick-guide/dates-and-deadlines/ · https://www.healthcare.gov/marketplace-in-your-state/ | On a court order or CMS update, and by 2026-12-15 | Owner |
 
 ## Enrollment and calculator verification, November 5, 2026
 

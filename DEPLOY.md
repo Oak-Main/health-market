@@ -64,6 +64,8 @@ Running the ETL in the pipeline means:
   remembering to do it.
 - A new plan year requires a reviewed, year-specific source registry before it can ship.
 
+Both `npm run build` for Next.js and the Pages release workflow run `npm run benchmarks:prepare`. The version-controlled snapshot is historical. To refresh a local checkout or development server, run the same preparation command. To verify a prepared directory separately, use `npm run etl:verify -- public/data 2026`.
+
 The workflow builds into an empty temporary directory. It promotes the dataset only after every listed shard passes integrity and source checks. A failed or empty refresh preserves the prior deployment.
 
 ## Manual deploy
@@ -71,10 +73,8 @@ The workflow builds into an empty temporary directory. It promotes the dataset o
 ```bash
 npx wrangler login
 npm ci && npm test
-stage=$(mktemp -d)
-npm run etl -- --plan-year=2026 --out="$stage" && npm run etl:verify -- "$stage" 2026 || exit 1
-mv public/data "$stage.previous" && mv "$stage" public/data || exit 1
-npx wrangler pages deploy public --project-name=subsidy-dropoff
+npm run benchmarks:prepare || exit 1
+npx wrangler pages deploy public --project-name=subsidy-dropoff --branch=main
 ```
 
 ## Verifying a deploy

@@ -71,7 +71,7 @@ describe("state marketplace routing", () => {
     expect(usesFederalData("OR", 2026)).toBe(true);
     expect(usesFederalData("OR", 2027)).toBe(false);
     expect(lookupMarketplace("OR", 2027)?.url).toBe("https://explorehealthor.gov/");
-    expect(lookupMarketplace("OK", 2027)?.type).toBe("SBE-FP");
+    expect(lookupMarketplace("OK", 2027)).toMatchObject({ type: "SBE-FP", url: "https://www.healthcare.gov" });
     expect(usesFederalData("OK", 2027)).toBe(true);
   });
 

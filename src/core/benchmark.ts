@@ -6,16 +6,8 @@
  * *absence* of real data an explicit, typed condition rather than a silent
  * fallback to something plausible.
  *
- * DATA REALITY AS OF 2026-07-27
- * -----------------------------
- * Plan year 2027 QHP data does not exist yet. Insurer rate filings were due
- * 2026-07-15; rates are finalized by state regulators in late summer; the CMS
- * QHP Landscape files and Exchange PUFs for PY2027 publish around October 2026.
- * The most recent complete plan data available today is PY2026.
- *
- * A PY2027 benchmark request therefore MUST return `dataUnavailable`, not an
- * estimate. Estimating it would be fabrication, and with excess-APTC repayment
- * caps repealed the cost of a wrong number now falls entirely on the user.
+ * ZIP pricing is available only after this application verifies and loads a
+ * year-specific CMS release. The federal income test does not require a quote.
  */
 
 import type { Cents, FplRegion, HouseholdMember, PlanYear } from "./types";
@@ -47,7 +39,7 @@ export interface BenchmarkQuote {
   readonly sourceFile: string;
   readonly sourcePublished: string;
   /** Time the upstream files were retrieved and the shard was built. */
-  readonly generated?: string;
+  readonly generated: string;
 }
 
 export type BenchmarkUnavailableReason =

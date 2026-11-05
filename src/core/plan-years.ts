@@ -1,7 +1,8 @@
 /**
  * Plan-year parameters with full provenance.
  *
- * This file is the single place a legislative or regulatory change lands.
+ * This registry holds the federal tax parameters and imports the dated federal
+ * enrollment record from public/oe-window.json for both API and website use.
  * The engine in ptc.ts / cliff.ts contains no year-specific constants.
  *
  * STATE OF THE LAW AS OF 2026-11-04
@@ -55,12 +56,11 @@ import type {
  * Verification stamps, one per source.
  *
  * A stamp moves only when the source was actually re-read from its primary
- * document on that date — never because the file was edited. The 2025
- * guidelines and the 2026 applicable percentage table were NOT re-read on
- * 2026-11-04 and keep their earlier stamp.
+ * document on that date. The November 5 pass rechecked both HHS notices and
+ * the IRS 2027 schedule. The 2026 IRS schedule retains its earlier stamp.
  */
 const CHECKED_2026_07_27 = "2026-07-27";
-const CHECKED_2026_11_04 = "2026-11-04";
+const CHECKED_2026_11_05 = "2026-11-05";
 
 // ---------------------------------------------------------------------------
 // HHS poverty guidelines
@@ -80,20 +80,16 @@ const FPL_2025: PovertyGuidelines = {
   },
   increment: {
     contiguous: 550_000, // $5,500
-    alaska: 687_000, // $6,870
-    hawaii: 632_000, // $6,320
+    alaska: 688_000, // $6,880
+    hawaii: 633_000, // $6,330
   },
   provenance: {
-    source: "HHS Poverty Guidelines (2025)",
-    url: "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
+    source: "HHS 2025 poverty guidelines, 90 FR 5917–5918",
+    url: "https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm",
     published: "2025-01-17",
-    checked: CHECKED_2026_07_27,
-    status: "secondary-concordant",
-    note:
-      "Contiguous base $15,650 corroborated by the widely reported 400% PY2026 " +
-      "cliff of $62,600 for a single filer (4 x 15,650). Alaska and Hawaii " +
-      "figures are carried from prior-year reporting and are NOT independently " +
-      "verified for 2025; see requireVerifiedRegion().",
+    checked: CHECKED_2026_11_05,
+    status: "primary-verified",
+    note: "The three regional guideline tables apply to plan year 2026.",
   },
 };
 
@@ -138,7 +134,7 @@ const FPL_2026: PovertyGuidelines = {
     source: "HHS Poverty Guidelines (2026), 91 FR 1797-1798",
     url: "https://www.federalregister.gov/documents/2026/01/15/2026-00755/annual-update-of-the-hhs-poverty-guidelines",
     published: "2026-01-15",
-    checked: CHECKED_2026_11_04,
+    checked: CHECKED_2026_11_05,
     status: "primary-verified",
     note:
       "Published 2026-01-15, effective 2026-01-13. Transcribed from the " +
@@ -202,11 +198,11 @@ const APT_2027: ApplicablePercentageTable = {
     source: "IRS Rev. Proc. 2026-26",
     url: "https://www.irs.gov/pub/irs-drop/rp-26-26.pdf",
     published: "2026-07-21",
-    checked: CHECKED_2026_11_04,
+    checked: CHECKED_2026_11_05,
     status: "primary-verified",
     note:
       "Read from the primary PDF (Rev. Proc. 2026-26, 2026-07-21) on " +
-      "2026-11-04. Section 3.01 publishes the 2027 applicable percentage " +
+      "2026-11-05. Section 3.01 publishes the 2027 applicable percentage " +
       "table: 2.15% (under 133%), 3.23%/4.30% (133-150%), 4.30%/6.78% " +
       "(150-200%), 6.78%/8.66% (200-250%), 8.66%/10.22% (250-300%), and " +
       "10.22%/10.22% for 'at least 300% but not more than 400%'. Section " +
@@ -271,8 +267,8 @@ const PY2027: PlanYearParameters = {
     source:
       "Composite — IRS Rev. Proc. 2026-26; 91 FR 1797-1798; HealthCare.gov; Congress.gov",
     url: "https://www.healthcare.gov/quick-guide/dates-and-deadlines",
-    published: "2026-11-01",
-    checked: CHECKED_2026_11_04,
+    published: APT_2027.provenance.published,
+    checked: enrollment.asOf,
     status: "primary-verified",
     note:
       "Primary sources read on 2026-11-04: Rev. Proc. 2026-26 (2027 applicable " +

@@ -140,17 +140,7 @@ npm run etl -- --plan-year=2026 --from-dir=./downloads   # offline
 
 Requires outbound HTTPS to `healthdata.gov`, `data.healthcare.gov`, `download.cms.gov`.
 
-Shards are **not** committed — `.github/workflows/deploy.yml` rebuilds them from the
-published files on every deploy and ships them as static assets, so production never
-talks to CMS at request time and the data cannot silently drift from source. When CMS
-publishes plan year 2027 (expect ~October 2026), the entire refresh procedure is
-re-running that workflow with `planYear: 2027`.
-
-> **The dataset in this repo is the synthetic fixture.** Every premium in
-> `src/fixtures/` is invented. `sourceFile` is the sentinel string
-> `SYNTHETIC-FIXTURE — NOT REAL CMS DATA`, which propagates into every API response;
-> `assertNotSynthetic()` is the guard for production bootstrap. Run the ETL from a
-> networked environment before deploying.
+The repository includes a historical 2026 snapshot. The release workflow downloads and verifies current CMS files and serves the resulting shards as static assets. The synthetic fixture in `src/fixtures/` is used only for tests and explicitly requested synthetic development runs. CMS has published 2027 files. A year-specific source registry and verified ZIP coverage are required before the automatic local price calculator can serve that year. Use `npm run benchmarks:prepare` before `npm run dev` for fresh local prices.
 
 ---
 
@@ -182,7 +172,7 @@ Non-negotiable build rules:
 | 2026 poverty guidelines | Primary-verified for all three regions, 91 FR 1797–1798 |
 | Rev. Proc. 2025-25 brackets | `secondary-single` — endpoints corroborated, intermediates are not |
 | Alaska / Hawaii guidelines | Primary-verified. One-person 2027 income ceilings are $79,800 / $73,440 |
-| PY2027 open enrollment end date | January 15, 2027 on HealthCare.gov. Appeal argued October 30. See ACCURACY.md for the dated court check. |
+| PY2027 open enrollment end date | January 15, 2027 on HealthCare.gov. The Fourth Circuit heard the appeal October 30. A later ruling could change the published date. See ACCURACY.md for the dated court check. |
 | CMS PUF download URLs | `urlVerified: false` — not reachable from the authoring environment |
 
 See ACCURACY.md for the primary sources, dates checked, and review triggers. The

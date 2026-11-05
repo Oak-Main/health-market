@@ -6,10 +6,9 @@
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   Content-Security-Policy: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://cloudflareinsights.com; font-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
 
-# Benchmark shards are immutable per deployment — the ETL writes a new set each
-# time and the deployment hash changes with them.
+# The custom domain reuses these URLs when new CMS data is deployed.
 /data/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=0, must-revalidate
 
 # Estimates are computed per request and must never be cached by an
 # intermediary: a cached result would show one household another's numbers.

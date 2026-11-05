@@ -3,7 +3,7 @@
 ## Status
 
 Cloudflare Pages serves `subsidydropoff.com` from `main`. A push to the separate
-repository default branch creates a branch preview. Promote a reviewed revision
+repository default branch, `claude/aca-marketplace-subsidy-estimator-xaujqu`, matches the workflow’s `claude/aca-marketplace-subsidy-estimator-**` push trigger and creates a branch preview. Promote a reviewed revision
 to `main` to release it. The existing weekly job checks out `main`, verifies it,
 and refreshes the production data from that exact commit.
 
@@ -71,9 +71,10 @@ The workflow builds into an empty temporary directory. It promotes the dataset o
 ## Manual deploy
 
 ```bash
-npx wrangler login
-npm ci && npm test
-npm run benchmarks:prepare || exit 1
+npx wrangler login &&
+npm ci &&
+npm run typecheck && npm run engine:typecheck && npm run check:security-floor && npm test &&
+npm run check:production &&
 npx wrangler pages deploy public --project-name=subsidy-dropoff --branch=main
 ```
 

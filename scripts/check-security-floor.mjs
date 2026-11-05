@@ -71,9 +71,9 @@ const nextVersion = JSON.parse(readFileSync(nextPkgPath, "utf8")).version;
 const nextMajor = parse(nextVersion).nums[0];
 console.log(`next  ${nextVersion}  (${nextPkgPath})`);
 
-if (nextMajor < 15) {
+if (!NEXT_FLOORS[nextMajor]) {
   problems.push(`next ${nextVersion} is on an unsupported line (no fixed release known for ${nextMajor}.x; need 15.x >= ${fmt(NEXT_FLOORS[15])} or 16.x >= ${fmt(NEXT_FLOORS[16])})`);
-} else if (NEXT_FLOORS[nextMajor]) {
+} else {
   const floor = NEXT_FLOORS[nextMajor];
   if (isBelow(nextVersion, floor)) {
     problems.push(`next ${nextVersion} is below the fixed floor for ${nextMajor}.x (${fmt(floor)}): GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r${nextMajor === 16 ? ", GHSA-673q-mjm6-r5xr" : ""}`);

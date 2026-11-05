@@ -15,6 +15,7 @@ export interface WorkingStep {
 export interface CurvePoint {
   annualIncome: number
   fplPercent: number
+  form8962Percent?: number
   annualPtc: number
   annualRequiredContribution: number
   annualNetPremium: number

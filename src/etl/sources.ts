@@ -34,6 +34,15 @@ export interface DatasetSource {
   readonly urlVerified: boolean;
 }
 
+// CMS dates the 2026 Rate and Plan Attributes PUF revisions August 4, 2026:
+// https://www.cms.gov/marketplace/resources/data/public-use-files (PY2026, checked November 5).
+// The November 5 cold run found 2,055 landscape counties and 1,873 reachable by ZIP.
+// The release gate requires at least 1,700 reachable counties and 90% source coverage.
+// Update the year-specific download URLs and their source revision together.
+export const BENCHMARK_SOURCE_RELEASE = {
+  planYear: 2026, ratePublished: "2026-08-04", minimumCounties: 1700, minimumSourceShare: 0.9,
+} as const;
+
 /**
  * Datasets required to derive the benchmark for federally-facilitated states.
  *
@@ -45,10 +54,6 @@ export interface DatasetSource {
  * former Socrata datasets live on the new datafile paths below; the landscape
  * file is now an XLSX inside a ZIP, which fetchText unpacks.
  */
-// CMS Exchange PUF index, PY2026 Rate and Plan Attributes entries, checked 2026-11-05.
-// Update the URLs and their source revision together when CMS revises this plan year.
-export const BENCHMARK_SOURCE_RELEASE = { planYear: 2026, ratePublished: "2026-08-04" } as const;
-
 export const DATASETS = {
   qhpLandscapeIndividualMedical: {
     id: "qhp-landscape-individual-medical",
@@ -230,14 +235,13 @@ function csvQuote(value: string): string {
 }
 
 /** One-sheet XLSX parts -> CSV text with a header row, as the Socrata feed served. */
-function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string {
+export function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string {
   // Workbooks can carry a small notes sheet ahead of the data sheet (the
   // PY2026 landscape does); the data sheet is always the largest worksheet.
   const worksheet = largestMember(parts, /^xl\/worksheets\/[^/]+\.xml$/i);
   if (!worksheet) {
     throw new Error(`XLSX from ${sourceUrl} has no worksheet part (found: ${Object.keys(parts).join(", ")})`);
   }
-  // Each indexed capture below is mandatory in its matching expression. Empty tags capture "".
   const shared: string[] = [];
   const sharedXml = parts["xl/sharedStrings.xml"];
   if (sharedXml) {
@@ -252,15 +256,15 @@ function xlsxToCsv(parts: Record<string, Uint8Array>, sourceUrl: string): string
   const rows: string[] = [];
   // exec-loop rather than matchAll: the data sheet can be hundreds of MB and
   // matchAll would materialise every row substring at once.
-  const rowRe = /<row(?:\s[^>]*)?>([\s\S]*?)<\/row>/g;
+  const rowRe = /<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g;
   let rowMatch: RegExpExecArray | null;
   while ((rowMatch = rowRe.exec(sheet)) !== null) {
     const cells: string[] = [];
-    const cellRe = /<c(\s[^>]*)?>([\s\S]*?)<\/c>/g;
+    const cellRe = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
     let cellMatch: RegExpExecArray | null;
-    while ((cellMatch = cellRe.exec(rowMatch[1]!)) !== null) {
+    while ((cellMatch = cellRe.exec(rowMatch[1] ?? "")) !== null) {
       const attrs = cellMatch[1] ?? "";
-      const body = cellMatch[2]!;
+      const body = cellMatch[2] ?? "";
       const refMatch = /r="([A-Z]+)\d+"/.exec(attrs);
       const idx = refMatch ? colIndex(refMatch[1]!) : cells.length;
       const type = /t="([^"]+)"/.exec(attrs)?.[1];

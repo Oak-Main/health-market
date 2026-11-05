@@ -382,6 +382,8 @@ describe("PTC curve", () => {
     expect(overIdx).toBe(atIdx + 1);
     expect(curve[atIdx]!.annualPtc).toBeGreaterThan(0);
     expect(curve[overIdx]!.annualPtc).toBe(0);
+    expect(curve[atIdx]!.form8962Percent).toBe(400);
+    expect(curve[overIdx]!.form8962Percent).toBe(401);
   });
 
   it("is monotonically non-increasing in the credit", () => {
@@ -548,12 +550,10 @@ describe("plan year parameters", () => {
   });
 
   it("stamps each source with the date it was actually last read", () => {
-    // A stamp moves only when the source was re-read from its primary
-    // document. The 2026 sources were re-read on 2026-11-04; the 2025
-    // sources were not, so they keep their earlier stamp.
-    expect(PY27.povertyGuidelines.provenance.checked).toBe("2026-11-04");
-    expect(PY27.applicablePercentageTable.provenance.checked).toBe("2026-11-04");
-    expect(PY26.povertyGuidelines.provenance.checked).toBe("2026-07-27");
+    // The November 5 pass checked both HHS notices and the 2027 IRS schedule.
+    expect(PY27.povertyGuidelines.provenance.checked).toBe("2026-11-05");
+    expect(PY27.applicablePercentageTable.provenance.checked).toBe("2026-11-05");
+    expect(PY26.povertyGuidelines.provenance.checked).toBe("2026-11-05");
     expect(PY26.applicablePercentageTable.provenance.checked).toBe("2026-07-27");
     // The 2027 sources are now primary-verified rather than corroborated.
     expect(PY27.povertyGuidelines.provenance.status).toBe("primary-verified");

@@ -70,7 +70,7 @@ function renderResult(d) {
   const { ptc, cliff, csr, benchmark } = r;
 
   const over = ptc.ineligibilityReason === "income-above-400-percent";
-  const tone = over ? "over" : cliff.cliffIsLive ? "live" : "";
+  const tone = over ? "over" : ptc.eligible && cliff.cliffIsLive ? "live" : "";
 
   let headline;
   if (ptc.ineligibilityReason === "income-below-minimum") {
@@ -227,6 +227,12 @@ async function submit(event) {
 }
 
 form.addEventListener("submit", submit);
+$("income-check").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.isComposing && event.target.matches("input")) {
+    event.preventDefault();
+    if (!$("check-limits").disabled) form.requestSubmit($("check-limits"));
+  }
+});
 
 // County disambiguation: re-run the estimate pinned to the chosen county.
 out.addEventListener("click", (event) => {

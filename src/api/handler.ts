@@ -224,10 +224,14 @@ export async function estimate(
     };
   }
 
-  const ageDays = (Date.now() - new Date(benchmark.sourcePublished).getTime()) / 86_400_000;
+  const builtAt = benchmark.generated ?? benchmark.sourcePublished;
+  const ageDays = (Date.now() - Date.parse(builtAt)) / 86_400_000;
+  if (!Number.isFinite(ageDays) || ageDays < 0) {
+    throw new UnverifiedDataError("The benchmark has an invalid refresh date.");
+  }
   if (ageDays > STALE_AFTER_DAYS) {
     throw new UnverifiedDataError(
-      `Benchmark data for this region was last built ${benchmark.sourcePublished} ` +
+      `Benchmark data for this region was last built ${builtAt} ` +
         `(${Math.floor(ageDays)} days ago), exceeding the ${STALE_AFTER_DAYS}-day ` +
         `staleness threshold. The weekly refresh pipeline may be broken — see /api/health.`,
     );
@@ -330,7 +334,7 @@ export async function handleRequest(
         dataAgeDays: ageDays === null ? null : Math.floor(ageDays),
         // true whenever there is no dataset to report on at all, matching
         // estimate()'s STALE_AFTER_DAYS threshold when there is one.
-        dataStale: ageDays === null ? true : ageDays > STALE_AFTER_DAYS,
+        dataStale: ageDays === null || !Number.isFinite(ageDays) || ageDays < 0 || ageDays > STALE_AFTER_DAYS,
       },
       200,
     );

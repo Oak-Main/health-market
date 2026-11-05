@@ -240,27 +240,39 @@ describe("estimate", () => {
   });
 });
 
+it("refuses a county from another ZIP in the same shard", async () => {
+  const result = await estimate(validate({ ...base, countyFips: "06037" }), provider());
+  expect(result.ok).toBe(false);
+  expect(result.unavailable).toMatchObject({ reason: "unknown-zip" });
+});
+
 describe("staleness gate", () => {
-  function providerWithSourcePublished(sourcePublished: string): StaticBenchmarkProvider {
+  function providerWithBuildDate(generated: string): StaticBenchmarkProvider {
     const loader = new MemoryShardLoader();
-    loader.add("770", { ...syntheticShard(2026), sourcePublished });
+    loader.add("770", { ...syntheticShard(2026), generated, sourcePublished: "2026-08-04" });
     return new StaticBenchmarkProvider(loader);
   }
 
-  it("refuses a shard published more than 21 days ago rather than serving it silently", async () => {
-    const stale = providerWithSourcePublished("2020-01-01");
+  it("refuses a shard built more than 21 days ago rather than serving it silently", async () => {
+    const stale = providerWithBuildDate("2020-01-01");
     await expect(estimate(validate(base), stale)).rejects.toThrow(UnverifiedDataError);
     await expect(estimate(validate(base), stale)).rejects.toThrow(/staleness threshold/);
   });
 
-  it("serves a shard published within the last 21 days", async () => {
+  it("refuses invalid and future build dates", async () => {
+    for (const date of ["invalid", "2099-01-01"]) {
+      await expect(estimate(validate(base), providerWithBuildDate(date))).rejects.toThrow(UnverifiedDataError);
+    }
+  });
+
+  it("serves a shard built within the last 21 days", async () => {
     const recent = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const response = await estimate(validate(base), providerWithSourcePublished(recent));
+    const response = await estimate(validate(base), providerWithBuildDate(recent));
     expect(response.ok).toBe(true);
   });
 
   it("surfaces the staleness rejection as a 503 through the HTTP adapter, not a 500", async () => {
-    const stale = providerWithSourcePublished("2020-01-01");
+    const stale = providerWithBuildDate("2020-01-01");
     const response = await handleRequest(
       new Request("https://example.test/api/estimate", {
         method: "POST",

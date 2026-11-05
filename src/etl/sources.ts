@@ -47,6 +47,10 @@ export interface DatasetSource {
  * former Socrata datasets live on the new datafile paths below; the landscape
  * file is now an XLSX inside a ZIP, which fetchText unpacks.
  */
+// CMS Exchange PUF index, PY2026 Rate and Plan Attributes entries, checked 2026-11-05.
+// Update the URLs and their source revision together when CMS revises this plan year.
+export const BENCHMARK_SOURCE_RELEASE = { planYear: 2026, ratePublished: "2026-08-04" } as const;
+
 export const DATASETS = {
   qhpLandscapeIndividualMedical: {
     id: "qhp-landscape-individual-medical",

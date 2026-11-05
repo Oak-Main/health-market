@@ -63,20 +63,18 @@ Running the ETL in the pipeline means:
   silently drift from source.
 - The weekly `schedule` trigger picks up CMS's in-year revisions without anyone
   remembering to do it.
-- **When CMS publishes plan year 2027 (expect around October 2026), the entire refresh
-  procedure is: run the workflow with `planYear: 2027`.** Nothing else changes.
+- A new plan year requires a reviewed, year-specific source registry before it can ship.
 
-If the ETL fails — CMS outage, a plan year that isn't published yet — the deploy still
-proceeds and the API returns a typed `dataset-not-loaded` or `plan-year-not-published`.
-That is deliberate. The site degrades to an honest "we don't have this yet" rather than
-inventing a premium.
+The workflow builds into an empty temporary directory. It promotes the dataset only after every listed shard passes integrity and source checks. A failed or empty refresh preserves the prior deployment.
 
 ## Manual deploy
 
 ```bash
 npx wrangler login
 npm ci && npm test
-npm run etl -- --plan-year=2026 --out=public/data
+stage=$(mktemp -d)
+npm run etl -- --plan-year=2026 --out="$stage" && npm run etl:verify -- "$stage" 2026 || exit 1
+mv public/data "$stage.previous" && mv "$stage" public/data || exit 1
 npx wrangler pages deploy public --project-name=subsidy-dropoff
 ```
 

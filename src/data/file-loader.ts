@@ -8,11 +8,15 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { UnverifiedDataError } from "../core/plan-years";
 
 import type { PlanYear } from "../core/types";
 import { type BenchmarkShard, type ShardIndex, type ShardLoader, validateShard } from "./shard";
 
 function assertValid(shard: BenchmarkShard, key: string): BenchmarkShard {
+  if (shard.planYear !== Number(key.split("/")[0]) || !shard.sourceFile || /synthetic/i.test(shard.sourceFile)) {
+    throw new UnverifiedDataError(`Dataset ${key} has missing or invalid source provenance.`);
+  }
   const problems = validateShard(shard);
   if (problems.length > 0) {
     throw new Error(

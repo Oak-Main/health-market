@@ -25,7 +25,7 @@ import {
   type CsvRow,
 } from "./build";
 import { parseCsvTable, parseMoneyToCents } from "./csv";
-import { DATASETS, fetchText, NetworkBlockedError, type DatasetKey } from "./sources";
+import { BENCHMARK_SOURCE_RELEASE, DATASETS, fetchText, NetworkBlockedError, type DatasetKey } from "./sources";
 import type { NormalisedPlanRate } from "./slcsp";
 
 interface Args {
@@ -39,8 +39,8 @@ function parseArgs(argv: readonly string[]): Args {
     argv.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
 
   const planYear = Number(get("plan-year") ?? new Date().getUTCFullYear());
-  if (!Number.isInteger(planYear)) {
-    throw new Error(`--plan-year must be an integer; got ${get("plan-year")}`);
+  if (planYear !== BENCHMARK_SOURCE_RELEASE.planYear) {
+    throw new Error(`The registered benchmark sources cover plan year ${BENCHMARK_SOURCE_RELEASE.planYear}, not ${planYear}.`);
   }
   return {
     planYear,
@@ -132,7 +132,7 @@ async function main(): Promise<void> {
   for (const row of landscape) {
     const fips = (row["FIPS County Code"] ?? "").trim().padStart(5, "0");
     const planId = (row["Plan ID (Standard Component)"] ?? row["Plan ID"] ?? "").trim();
-    if (!fips || !planId) continue;
+    if (!/^\d{5}$/.test(fips) || fips === "00000" || !planId) continue;
 
     const candidates = ratesByPlan.get(planId);
     if (!candidates || candidates.length === 0) continue;
@@ -170,7 +170,7 @@ async function main(): Promise<void> {
   for (const row of zipRows) {
     const zip = (row["zipcode"] ?? row["ZIP Code"] ?? row["Zip Code"] ?? row["zip"] ?? "").trim().padStart(5, "0");
     const fips = (row["countycode"] ?? row["FIPS"] ?? row["fips"] ?? row["county"] ?? "").trim().padStart(5, "0");
-    if (!/^\d{5}$/.test(zip) || !/^\d{5}$/.test(fips)) continue;
+    if (!/^\d{5}$/.test(zip) || zip === "00000" || !/^\d{5}$/.test(fips) || fips === "00000") continue;
     (zipToCounties[zip] ??= []).push(fips);
   }
   console.log(`  ${Object.keys(zipToCounties).length} ZIP codes in the crosswalk`);
@@ -179,7 +179,7 @@ async function main(): Promise<void> {
   const outcome = buildShards(counties, {
     planYear: args.planYear,
     sourceFile: `${DATASETS.ratePuf.id} + ${DATASETS.qhpLandscapeIndividualMedical.id}`,
-    sourcePublished: new Date().toISOString().slice(0, 10),
+    sourcePublished: BENCHMARK_SOURCE_RELEASE.ratePublished,
     generated: new Date().toISOString(),
     zipToCounties,
   });
@@ -220,6 +220,9 @@ async function main(): Promise<void> {
     }, null, 2),
   );
 
+  if (writtenPrefixes.length === 0 || outcome.countiesBuilt === 0) {
+    throw new Error("ETL produced no usable benchmark dataset.");
+  }
   if (failures > 0) {
     console.error(`\n${failures} shard(s) failed validation and were NOT written.`);
     process.exitCode = 1;

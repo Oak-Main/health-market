@@ -74,7 +74,7 @@ function county(
 export function syntheticShard(planYear: number): BenchmarkShard {
   return {
     planYear,
-    generated: "2026-07-27T00:00:00.000Z",
+    generated: new Date().toISOString(),
     sourceFile: SYNTHETIC_SOURCE,
     // Deliberately "yesterday" rather than a fixed date: this fixture backs
     // both the API's staleness gate tests and unrelated tests that just need

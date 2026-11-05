@@ -46,6 +46,8 @@ export interface BenchmarkQuote {
   /** Provenance shown in the UI: which file, published when. */
   readonly sourceFile: string;
   readonly sourcePublished: string;
+  /** Time the upstream files were retrieved and the shard was built. */
+  readonly generated?: string;
 }
 
 export type BenchmarkUnavailableReason =

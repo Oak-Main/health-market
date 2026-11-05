@@ -208,7 +208,7 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       fips = candidates[0]!;
     }
 
-    const county = shard.counties[fips];
+    const county = candidates.includes(fips) ? shard.counties[fips] : undefined;
     if (!county) {
       return {
         kind: "unavailable",
@@ -283,6 +283,7 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       slcspPlanId: county.slcspPlanId,
       sourceFile: shard.sourceFile,
       sourcePublished: shard.sourcePublished,
+      generated: shard.generated,
     };
   }
 }

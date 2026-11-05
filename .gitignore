@@ -3,3 +3,5 @@ dist/
 *.log
 *.tsbuildinfo
 .next/downloads/
+
+.benchmark-refresh-*/

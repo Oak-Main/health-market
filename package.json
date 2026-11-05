@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run benchmarks:prepare",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -17,9 +18,13 @@
     "engine:typecheck": "tsc -p tsconfig.engine.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "benchmarks:prepare": "node scripts/prepare-benchmarks.mjs",
     "etl": "tsx src/etl/run.ts",
     "etl:verify": "tsx src/etl/verify.ts",
-    "dev:engine": "tsx src/dev-server.ts"
+    "dev:engine": "tsx src/dev-server.ts",
+    "check:security-floor": "node scripts/check-security-floor.mjs",
+    "check:production": "npm run build && npm run smoke:production",
+    "smoke:production": "node scripts/smoke-production.mjs"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
@@ -27,10 +32,11 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "postcss": "^8.5.23",
+    "proper-lockfile": "4.1.2",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -38,7 +44,7 @@
     "fflate": "^0.8.3",
     "lucide-react": "^1.27.0",
     "motion": "^12.42.2",
-    "next": "^16.2.12",
+    "next": "^16.4.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "recharts": "^3.10.1",

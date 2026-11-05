@@ -19,6 +19,8 @@
  * @see https://www.cms.gov/marketplace/in-person-assisters/training-webinars/training/marketplaces-map
  */
 
+import { CURRENT_PLAN_YEAR, UPCOMING_PLAN_YEAR } from "../core/plan-years";
+
 export type MarketplaceType =
   /** Federally-facilitated: plans and rates are in the federal PUFs. */
   | "FFM"
@@ -57,6 +59,7 @@ function ffm(state: string, name: string): StateMarketplace {
   };
 }
 
+/** Base table for 2026. Use lookupMarketplace for a specific coverage year. */
 export const STATE_MARKETPLACES: readonly StateMarketplace[] = [
   // --- Federally-facilitated (28) ---
   ffm("AL", "Alabama"),
@@ -105,8 +108,7 @@ export const STATE_MARKETPLACES: readonly StateMarketplace[] = [
     exchangeName: "Oregon Health Insurance Marketplace",
     hasStateSubsidy: false,
     note:
-      "Oregon is scheduled to launch a full State-Based Exchange for plan year " +
-      "2027. Re-check this classification before PY2027 open enrollment.",
+      "Oregon used HealthCare.gov for the 2026 plan year. Use plan-year lookup for later enrollment.",
   },
 
   // --- State-based exchanges (21, including DC) ---
@@ -292,19 +294,30 @@ const BY_STATE: ReadonlyMap<string, StateMarketplace> = new Map(
   STATE_MARKETPLACES.map((m) => [m.state, m]),
 );
 
-export function lookupMarketplace(stateCode: string): StateMarketplace | undefined {
-  return BY_STATE.get(stateCode.toUpperCase());
+// CMS Plan Year 2027 Marketplace map and HealthCare.gov's Oregon transition notice.
+const PY2027_CHANGES: Readonly<Record<string, Partial<StateMarketplace>>> = {
+  OR: { type: "SBE", url: "https://explorehealthor.gov/", note: "Oregon operates its own enrollment platform for 2027 coverage." },
+  OK: { type: "SBE-FP" },
+};
+export function lookupMarketplace(stateCode: string, planYear = CURRENT_PLAN_YEAR): StateMarketplace | undefined {
+  const entry = BY_STATE.get(stateCode.toUpperCase());
+  const change = entry && planYear === UPCOMING_PLAN_YEAR ? PY2027_CHANGES[entry.state] : undefined;
+  return entry && change ? { ...entry, ...change } : entry;
 }
 
 /** States whose plan data lives in the federal QHP Landscape / Rate PUFs. */
-export function usesFederalData(stateCode: string): boolean {
-  const m = lookupMarketplace(stateCode);
+export function usesFederalData(stateCode: string, planYear = CURRENT_PLAN_YEAR): boolean {
+  const m = lookupMarketplace(stateCode, planYear);
   return m !== undefined && (m.type === "FFM" || m.type === "SBE-FP");
 }
 
-export function marketplaceCounts(): Record<MarketplaceType, number> {
+export function marketplaceCounts(planYear = CURRENT_PLAN_YEAR): Record<MarketplaceType, number> {
   return STATE_MARKETPLACES.reduce(
-    (acc, m) => ({ ...acc, [m.type]: acc[m.type] + 1 }),
+    (acc, entry) => {
+      const type = lookupMarketplace(entry.state, planYear)!.type;
+      acc[type] += 1;
+      return acc;
+    },
     { FFM: 0, "SBE-FP": 0, SBE: 0 } as Record<MarketplaceType, number>,
   );
 }

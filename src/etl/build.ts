@@ -13,6 +13,14 @@ import {
   type NormalisedPlanRate,
 } from "./slcsp";
 
+/** CMS supplies numeric ZIP and county codes that can lose their leading zeros. */
+export function normalizeGeographicCode(raw: string): string | null {
+  const value = raw.trim();
+  if (!/^\d{1,5}$/.test(value)) return null;
+  const padded = value.padStart(5, "0");
+  return padded === "00000" ? null : padded;
+}
+
 /** Rate PUF columns we depend on. */
 export const RATE_PUF_COLUMNS = [
   "BusinessYear",

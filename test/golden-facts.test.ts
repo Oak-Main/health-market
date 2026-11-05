@@ -133,10 +133,31 @@ describe("federal poverty line", () => {
     expect(cliffIncomeFor(PY26, 4, "contiguous")).toBe(USD(128_600));
   });
 
-  it("refuses to compute for Alaska and Hawaii while their tables are unverified", () => {
-    // Returning a confidently wrong number is worse than returning an error.
-    expect(() => fplAmount(PY27, 1, "alaska")).toThrow(UnverifiedDataError);
-    expect(() => fplAmount(PY27, 1, "hawaii")).toThrow(UnverifiedDataError);
+  it("serves Alaska and Hawaii from their own verified 2026 tables", () => {
+    // 91 FR 1797-1798 (FR Doc. 2026-00755), read 2026-11-04. Alaska $19,950
+    // base and +$7,100 per person; Hawaii $18,360 base and +$6,530 per person.
+    // These regions were zeroed placeholders until that pass.
+    expect(fplAmount(PY27, 1, "alaska")).toBe(USD(19_950));
+    expect(fplAmount(PY27, 2, "alaska")).toBe(USD(27_050));
+    expect(fplAmount(PY27, 4, "alaska")).toBe(USD(41_250));
+    expect(fplAmount(PY27, 1, "hawaii")).toBe(USD(18_360));
+    expect(fplAmount(PY27, 2, "hawaii")).toBe(USD(24_890));
+    expect(fplAmount(PY27, 4, "hawaii")).toBe(USD(37_950));
+  });
+
+  it("still refuses a region whose table has not been verified", () => {
+    // Every region currently verifies, so the runtime guard is exercised with
+    // a deliberately unverified copy. Returning a confidently wrong number is
+    // worse than returning an error.
+    const unverified = {
+      ...PY27,
+      povertyGuidelines: {
+        ...PY27.povertyGuidelines,
+        base: { ...PY27.povertyGuidelines.base, alaska: 0 },
+        increment: { ...PY27.povertyGuidelines.increment, alaska: 0 },
+      },
+    };
+    expect(() => fplAmount(unverified, 1, "alaska")).toThrow(UnverifiedDataError);
   });
 
   it("rejects invalid household sizes", () => {
@@ -217,19 +238,19 @@ describe("worked premium tax credit examples (plan year 2027)", () => {
     expect(overCliff.ineligibilityReason).toBe("income-above-400-percent");
   });
 
-  it("GF#9: single at $40,000 -> 251% FPL -> 8.69% -> $289.67/mo contribution", () => {
+  it("GF#9: single at $40,000 -> 250% on Form 8962 -> 8.66% -> $288.67/mo contribution", () => {
     const benchmarkMonthly = USD(700);
     const result = computePtc(
       PY27,
       household({ annualIncome: USD(40_000) }),
       benchmarkMonthly * 12,
     );
-    expect(result.fpl.form8962Percent).toBe(251);
-    expect(result.applicablePercentage).toBe(869);
-    expect(result.annualRequiredContribution).toBe(USD(3_476));
-    expect(result.monthlyRequiredContribution).toBe(28_967);
-    expect(result.annualPtc).toBe(USD(4_924));
-    expect(result.monthlyPtc).toBe(41_033);
+    expect(result.fpl.form8962Percent).toBe(250);
+    expect(result.applicablePercentage).toBe(866);
+    expect(result.annualRequiredContribution).toBe(USD(3_464));
+    expect(result.monthlyRequiredContribution).toBe(28_867);
+    expect(result.annualPtc).toBe(USD(4_936));
+    expect(result.monthlyPtc).toBe(41_133);
   });
 
   it("GF#10: single at exactly 150% FPL enters the next band at 4.30%", () => {
@@ -511,8 +532,9 @@ describe("plan year parameters", () => {
 
   it("flags the PY2027 open-enrollment end date as contested", () => {
     expect(PY27.openEnrollment.end).toBeNull();
+    expect(PY27.openEnrollment.publishedEnd).toBe("2027-01-15");
     expect(PY27.openEnrollment.endIsContested).toBe(true);
-    expect(PY27.openEnrollment.note).toMatch(/City of Columbus/);
+    expect(PY27.openEnrollment.note).toMatch(/vacated/);
     expect(PY26.openEnrollment.endIsContested).toBe(false);
   });
 
@@ -520,8 +542,20 @@ describe("plan year parameters", () => {
     for (const py of [PY26, PY27]) {
       expect(py.povertyGuidelines.provenance.url).toMatch(/^https:\/\//);
       expect(py.applicablePercentageTable.provenance.url).toMatch(/^https:\/\//);
-      expect(py.applicablePercentageTable.provenance.checked).toBe("2026-07-27");
+      expect(py.povertyGuidelines.provenance.checked).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(py.applicablePercentageTable.provenance.checked).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
+  });
+
+  it("stamps each source with the date it was actually last read", () => {
+    // The November 5 pass checked both HHS notices and the 2027 IRS schedule.
+    expect(PY27.povertyGuidelines.provenance.checked).toBe("2026-11-05");
+    expect(PY27.applicablePercentageTable.provenance.checked).toBe("2026-11-05");
+    expect(PY26.povertyGuidelines.provenance.checked).toBe("2026-11-05");
+    expect(PY26.applicablePercentageTable.provenance.checked).toBe("2026-07-27");
+    // The 2027 sources are now primary-verified rather than corroborated.
+    expect(PY27.povertyGuidelines.provenance.status).toBe("primary-verified");
+    expect(PY27.applicablePercentageTable.provenance.status).toBe("primary-verified");
   });
 });
 

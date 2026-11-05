@@ -11,10 +11,13 @@ Background and the GO/NO-GO analysis that produced this design:
 
 ---
 
-## State of the law (as of 2026-07-27)
+## State of the law (as of 2026-11-04)
 
 The ARPA/IRA **enhanced premium tax credits lapsed on 2025-12-31 and were not
-extended.** The pre-ARPA §36B schedule governs plan years 2026 and 2027, which means:
+extended.** Re-checked against Congress.gov on 2026-11-04: the House-passed
+3-year extension (H.R. 1834) is still sitting on the Senate calendar and
+H.R. 5145 is still "Introduced" — no extension has become law. The pre-ARPA
+§36B schedule governs plan years 2026 and 2027, which means:
 
 - A hard eligibility **cliff at 400% FPL** — one cent over and the credit is `$0`,
   not a reduced amount.
@@ -104,10 +107,10 @@ a typed reason, not an estimate:
 
 | Situation | Behaviour |
 |---|---|
-| PY2027 benchmark requested | `plan-year-not-published` (CMS publishes ~Oct 2026) |
+| Local ZIP benchmark unavailable | `dataset-not-loaded`. Use the income check or enter your Marketplace benchmark |
 | ZIP spans several counties | `ambiguous-zip` + the candidate list — never a guess |
 | State runs its own exchange | `state-based-exchange` + a link to the right one |
-| Alaska / Hawaii poverty guidelines | `UnverifiedDataError` → HTTP 503 |
+| Alaska / Hawaii poverty guidelines | Verified regional income ranges and contribution calculations |
 | No silver plan in a county | `null` benchmark — never a substituted metal |
 
 A confidently wrong subsidy is far worse than an honest gap, and with repayment caps
@@ -137,17 +140,7 @@ npm run etl -- --plan-year=2026 --from-dir=./downloads   # offline
 
 Requires outbound HTTPS to `healthdata.gov`, `data.healthcare.gov`, `download.cms.gov`.
 
-Shards are **not** committed — `.github/workflows/deploy.yml` rebuilds them from the
-published files on every deploy and ships them as static assets, so production never
-talks to CMS at request time and the data cannot silently drift from source. When CMS
-publishes plan year 2027 (expect ~October 2026), the entire refresh procedure is
-re-running that workflow with `planYear: 2027`.
-
-> **The dataset in this repo is the synthetic fixture.** Every premium in
-> `src/fixtures/` is invented. `sourceFile` is the sentinel string
-> `SYNTHETIC-FIXTURE — NOT REAL CMS DATA`, which propagates into every API response;
-> `assertNotSynthetic()` is the guard for production bootstrap. Run the ETL from a
-> networked environment before deploying.
+The repository includes a historical 2026 snapshot. The release workflow downloads and verifies current CMS files and serves the resulting shards as static assets. The synthetic fixture in `src/fixtures/` is reserved for tests. CMS has published 2027 files. A year-specific source registry and verified ZIP coverage are required before the automatic local price calculator can serve that year. Use `npm run benchmarks:prepare` before `npm run dev` for fresh local prices.
 
 ---
 
@@ -175,15 +168,14 @@ Non-negotiable build rules:
 
 | Item | Status |
 |---|---|
-| Rev. Proc. 2026-26 brackets | `secondary-concordant` — two independent sources agree; **primary PDF not read** |
-| 2026 poverty guidelines | 1- and 4-person sourced; **per-person increment derived** |
+| Rev. Proc. 2026-26 brackets | Primary-verified, IRS Rev. Proc. 2026-26 §§3.01–3.02 |
+| 2026 poverty guidelines | Primary-verified for all three regions, 91 FR 1797–1798 |
 | Rev. Proc. 2025-25 brackets | `secondary-single` — endpoints corroborated, intermediates are not |
-| Alaska / Hawaii guidelines | **unpopulated** — engine refuses to compute |
-| PY2027 open enrollment end date | **contested** — vacated 2026-06-12 in *City of Columbus v. Kennedy*, on appeal |
+| Alaska / Hawaii guidelines | Primary-verified. One-person 2027 income ceilings are $79,800 / $73,440 |
+| PY2027 open enrollment end date | January 15, 2027 on HealthCare.gov. The Fourth Circuit heard the appeal October 30. A later ruling could change the published date. See ACCURACY.md for the dated court check. |
 | CMS PUF download URLs | `urlVerified: false` — not reachable from the authoring environment |
 
-The authoring environment had all outbound HTTPS blocked by egress policy, so no primary
-document could be opened directly. **Re-verify every row above before production.** The
+See ACCURACY.md for the primary sources, dates checked, and review triggers. The
 chaining invariant (`validateTableChaining`) and the 51-jurisdiction count assertion are
 in place precisely because transcription from secondary sources is error-prone — the
 latter has already caught one real omission (Oklahoma).

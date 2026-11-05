@@ -12,9 +12,9 @@
 import type { CsrResult } from "./types";
 
 /**
- * Determine the CSR silver variant from the Form 8962 whole-number FPL percent.
+ * Determine the CSR silver variant from the unrounded income-to-poverty percentage.
  *
- * @param fplPercent Whole-number household income as a percent of FPL.
+ * @param fplPercent Household income as a percent of FPL.
  * @param enrollingInSilver CSRs attach only to silver-metal plans.
  */
 export function determineCsr(fplPercent: number, enrollingInSilver: boolean): CsrResult {
@@ -47,14 +47,14 @@ export function determineCsr(fplPercent: number, enrollingInSilver: boolean): Cs
     return {
       variant: "csr-87",
       actuarialValue: 0.87,
-      reason: "Income is between 151% and 200% of the federal poverty line.",
+      reason: "Income is above 150% and at or below 200% of the federal poverty line.",
     };
   }
   if (fplPercent <= 250) {
     return {
       variant: "csr-73",
       actuarialValue: 0.73,
-      reason: "Income is between 201% and 250% of the federal poverty line.",
+      reason: "Income is above 200% and at or below 250% of the federal poverty line.",
     };
   }
 

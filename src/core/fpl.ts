@@ -4,8 +4,8 @@
  * THE CRITICAL DETAIL
  * -------------------
  * The >400% eligibility test is performed on the RAW comparison
- * `household income > 4 x FPL`, BEFORE any rounding. Only if that test passes
- * is the percentage rounded to a whole number.
+ * `household income > 4 x FPL`, BEFORE any rounding. For incomes at or below the cap,
+ * Worksheet 2 drops all digits after the decimal point.
  *
  * This ordering matters enormously and is the single most common bug in
  * third-party subsidy calculators. A household at 400.4% of FPL rounds to
@@ -78,7 +78,7 @@ export function computeFpl(
   const exactRatio = annualIncome / amount;
   const form8962Percent = exceedsFourTimesFpl
     ? ABOVE_400_SENTINEL
-    : Math.round((annualIncome * 100) / amount);
+    : Math.floor((annualIncome * 100) / amount);
 
   return {
     fplAmount: amount,

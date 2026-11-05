@@ -8,8 +8,8 @@
  * data.healthcare.gov and download.cms.gov. Shards are committed to the repo
  * and served as static assets, so production never talks to CMS at request time.
  *
- * PLAN YEAR AVAILABILITY: PY2027 files publish around October 2026. Running
- * this for 2027 before then is expected to fail at the fetch step.
+ * Runs only for the registered CMS release. New plan years require their own
+ * reviewed sources before this pipeline will build or label public premiums.
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -20,12 +20,13 @@ import {
   buildPlanRates,
   buildShards,
   indexPlanAttributes,
+  normalizeGeographicCode,
   resolveRatingArea,
   type CountyInput,
   type CsvRow,
 } from "./build";
 import { parseCsvTable, parseMoneyToCents } from "./csv";
-import { DATASETS, fetchText, NetworkBlockedError, type DatasetKey } from "./sources";
+import { BENCHMARK_SOURCE_RELEASE, DATASETS, fetchText, NetworkBlockedError, type DatasetKey } from "./sources";
 import type { NormalisedPlanRate } from "./slcsp";
 
 interface Args {
@@ -39,8 +40,8 @@ function parseArgs(argv: readonly string[]): Args {
     argv.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
 
   const planYear = Number(get("plan-year") ?? new Date().getUTCFullYear());
-  if (!Number.isInteger(planYear)) {
-    throw new Error(`--plan-year must be an integer; got ${get("plan-year")}`);
+  if (planYear !== BENCHMARK_SOURCE_RELEASE.planYear) {
+    throw new Error(`The registered benchmark sources cover plan year ${BENCHMARK_SOURCE_RELEASE.planYear}, not ${planYear}.`);
   }
   return {
     planYear,
@@ -130,7 +131,7 @@ async function main(): Promise<void> {
   let unresolved = 0;
 
   for (const row of landscape) {
-    const fips = (row["FIPS County Code"] ?? "").trim().padStart(5, "0");
+    const fips = normalizeGeographicCode(row["FIPS County Code"] ?? "");
     const planId = (row["Plan ID (Standard Component)"] ?? row["Plan ID"] ?? "").trim();
     if (!fips || !planId) continue;
 
@@ -168,9 +169,9 @@ async function main(): Promise<void> {
 
   const zipToCounties: Record<string, string[]> = {};
   for (const row of zipRows) {
-    const zip = (row["zipcode"] ?? row["ZIP Code"] ?? row["Zip Code"] ?? row["zip"] ?? "").trim().padStart(5, "0");
-    const fips = (row["countycode"] ?? row["FIPS"] ?? row["fips"] ?? row["county"] ?? "").trim().padStart(5, "0");
-    if (!/^\d{5}$/.test(zip) || !/^\d{5}$/.test(fips)) continue;
+    const zip = normalizeGeographicCode(row["zipcode"] ?? row["ZIP Code"] ?? row["Zip Code"] ?? row["zip"] ?? "");
+    const fips = normalizeGeographicCode(row["countycode"] ?? row["FIPS"] ?? row["fips"] ?? row["county"] ?? "");
+    if (!zip || !fips) continue;
     (zipToCounties[zip] ??= []).push(fips);
   }
   console.log(`  ${Object.keys(zipToCounties).length} ZIP codes in the crosswalk`);
@@ -179,7 +180,7 @@ async function main(): Promise<void> {
   const outcome = buildShards(counties, {
     planYear: args.planYear,
     sourceFile: `${DATASETS.ratePuf.id} + ${DATASETS.qhpLandscapeIndividualMedical.id}`,
-    sourcePublished: new Date().toISOString().slice(0, 10),
+    sourcePublished: BENCHMARK_SOURCE_RELEASE.ratePublished,
     generated: new Date().toISOString(),
     zipToCounties,
   });
@@ -190,19 +191,19 @@ async function main(): Promise<void> {
   }
 
   console.log("5/5 Validating and writing");
-  const dir = join(args.outDir, String(args.planYear));
-  await mkdir(dir, { recursive: true });
-
-  let failures = 0;
-  const writtenPrefixes: string[] = [];
+  if (outcome.shards.size === 0 || outcome.countiesBuilt === 0) {
+    throw new Error("ETL produced no usable benchmark dataset.");
+  }
+  const invalidShards: string[] = [];
   for (const [prefix, shard] of outcome.shards) {
     const problems = validateShard(shard);
-    if (problems.length > 0) {
-      failures += 1;
-      console.error(`  FAILED ${prefix}: ${problems.slice(0, 3).join("; ")}`);
-      continue;
-    }
-    writtenPrefixes.push(prefix);
+    if (problems.length) invalidShards.push(`${prefix}: ${problems.join("; ")}`);
+  }
+  if (invalidShards.length) throw new Error(`Invalid benchmark shards:\n${invalidShards.join("\n")}`);
+  const dir = join(args.outDir, String(args.planYear));
+  await mkdir(dir, { recursive: true });
+  const writtenPrefixes = [...outcome.shards.keys()].sort();
+  for (const [prefix, shard] of outcome.shards) {
     await writeFile(join(dir, `${prefix}.json`), JSON.stringify(shard));
   }
 
@@ -212,19 +213,14 @@ async function main(): Promise<void> {
       planYear: args.planYear,
       generated: new Date().toISOString(),
       shardCount: writtenPrefixes.length,
-      shardsFailedValidation: failures,
+      shardsFailedValidation: 0,
       countiesBuilt: outcome.countiesBuilt,
       countiesSkipped: outcome.countiesSkipped,
       warnings: outcome.warnings,
-      prefixes: writtenPrefixes.sort(),
+      prefixes: writtenPrefixes,
     }, null, 2),
   );
 
-  if (failures > 0) {
-    console.error(`\n${failures} shard(s) failed validation and were NOT written.`);
-    process.exitCode = 1;
-    return;
-  }
   console.log(`\nWrote ${writtenPrefixes.length} shards to ${dir}`);
 }
 

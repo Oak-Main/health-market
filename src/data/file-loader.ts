@@ -8,11 +8,15 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { UnverifiedDataError } from "../core/plan-years";
 
 import type { PlanYear } from "../core/types";
 import { type BenchmarkShard, type ShardIndex, type ShardLoader, validateShard } from "./shard";
 
 function assertValid(shard: BenchmarkShard, key: string): BenchmarkShard {
+  if (shard.planYear !== Number(key.split("/")[0]) || !shard.sourceFile || /synthetic/i.test(shard.sourceFile)) {
+    throw new UnverifiedDataError(`Dataset ${key} has missing or invalid source provenance.`);
+  }
   const problems = validateShard(shard);
   if (problems.length > 0) {
     throw new Error(
@@ -21,6 +25,17 @@ function assertValid(shard: BenchmarkShard, key: string): BenchmarkShard {
     );
   }
   return shard;
+}
+
+async function missingAsset(response: Response): Promise<boolean> {
+  if (response.status === 404) return true;
+  if (response.ok && response.headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
+    const html = await response.text();
+    // Cloudflare Pages can resolve an absent static path to this site's homepage.
+    if (/<title>Subsidy Dropoff/i.test(html) && /<form\b[^>]*\bid=["']f["']/i.test(html)) return true;
+    throw new Error("The benchmark asset returned an unexpected HTML page.");
+  }
+  return false;
 }
 
 /** Reads shards from the filesystem. Used by the dev server and by Node hosts. */
@@ -81,7 +96,7 @@ export class AssetShardLoader implements ShardLoader {
     const response = await this.fetcher.fetch(
       new Request(`https://assets.local${this.basePath}/${planYear}/${zip3}.json`),
     );
-    if (response.status === 404) {
+    if (await missingAsset(response)) {
       this.cache.set(key, null);
       return null;
     }
@@ -97,7 +112,7 @@ export class AssetShardLoader implements ShardLoader {
     const response = await this.fetcher.fetch(
       new Request(`https://assets.local${this.basePath}/${planYear}/index.json`),
     );
-    if (response.status === 404) return null;
+    if (await missingAsset(response)) return null;
     if (!response.ok) {
       throw new Error(`index.json fetch for plan year ${planYear} failed: HTTP ${response.status}`);
     }

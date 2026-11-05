@@ -74,14 +74,9 @@ function county(
 export function syntheticShard(planYear: number): BenchmarkShard {
   return {
     planYear,
-    generated: "2026-07-27T00:00:00.000Z",
+    generated: new Date().toISOString(),
     sourceFile: SYNTHETIC_SOURCE,
-    // Deliberately "yesterday" rather than a fixed date: this fixture backs
-    // both the API's staleness gate tests and unrelated tests that just need
-    // a working shard, and a fixed date would eventually go stale on its own
-    // and start failing tests that have nothing to do with staleness. The
-    // SYNTHETIC sourceFile above is what actually flags this as fake data —
-    // this date only needs to be recent, not meaningful.
+    // Fixtures are built now using a mock publication date one day earlier.
     sourcePublished: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     zipToCounties: {
       // Single-county ZIP, federally-facilitated state.
@@ -112,5 +107,5 @@ export class SyntheticDataInProductionError extends Error {
 
 /** Call this in any production bootstrap path. */
 export function assertNotSynthetic(shard: Pick<BenchmarkShard, "sourceFile">): void {
-  if (shard.sourceFile.includes("SYNTHETIC")) throw new SyntheticDataInProductionError();
+  if (/synthetic/i.test(shard.sourceFile)) throw new SyntheticDataInProductionError();
 }

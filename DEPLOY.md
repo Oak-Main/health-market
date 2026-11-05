@@ -2,11 +2,10 @@
 
 ## Status
 
-The deploy pipeline is complete and committed. It has **not** been executed, because
-the environment it was authored in has no Cloudflare credentials and its egress policy
-denies `api.cloudflare.com` outright (`connect_rejected: gateway answered 403 to
-CONNECT`). Two secrets are the only thing standing between the current state and a
-live site.
+Cloudflare Pages serves `subsidydropoff.com` from `main`. A push to the separate
+repository default branch, `claude/aca-marketplace-subsidy-estimator-xaujqu`, matches the workflow’s `claude/aca-marketplace-subsidy-estimator-**` push trigger and creates a branch preview. Promote a reviewed revision
+to `main` to release it. The existing weekly job checks out `main`, verifies it,
+and refreshes the production data from that exact commit.
 
 ## One-time setup
 
@@ -39,7 +38,7 @@ GitHub → Actions → "Deploy to Cloudflare Pages" → Run workflow
 ```
 
 The workflow creates the Pages project (`subsidy-dropoff`) on first run. It will
-typecheck, run the 117 tests, pull the CMS public use files, derive benchmark shards,
+typecheck, run the test suite, pull the CMS public use files, derive benchmark shards,
 refuse to proceed if synthetic fixture data is present, and deploy.
 
 ### 4. Attach the domain
@@ -63,21 +62,21 @@ Running the ETL in the pipeline means:
   silently drift from source.
 - The weekly `schedule` trigger picks up CMS's in-year revisions without anyone
   remembering to do it.
-- **When CMS publishes plan year 2027 (expect around October 2026), the entire refresh
-  procedure is: run the workflow with `planYear: 2027`.** Nothing else changes.
+- A new plan year requires a reviewed, year-specific source registry before it can ship.
 
-If the ETL fails — CMS outage, a plan year that isn't published yet — the deploy still
-proceeds and the API returns a typed `dataset-not-loaded` or `plan-year-not-published`.
-That is deliberate. The site degrades to an honest "we don't have this yet" rather than
-inventing a premium.
+Both `npm run build` for Next.js and the Pages release workflow run `npm run benchmarks:prepare`. The version-controlled snapshot is historical. To refresh a local checkout or development server, run the same preparation command. To verify a prepared directory separately, use `npm run etl:verify -- public/data 2026`.
+
+The workflow builds into an empty temporary directory. It promotes the dataset only after every listed shard passes integrity and source checks. A failed or empty refresh preserves the prior deployment.
 
 ## Manual deploy
 
 ```bash
 npx wrangler login
-npm ci && npm test
-npm run etl -- --plan-year=2026 --out=public/data
-npx wrangler pages deploy public --project-name=subsidy-dropoff
+set -e
+npm ci
+npm run typecheck && npm run engine:typecheck && npm run check:security-floor && npm test
+npm run check:production
+npx wrangler pages deploy public --project-name=subsidy-dropoff --branch=main
 ```
 
 ## Verifying a deploy
@@ -101,10 +100,7 @@ curl -sI https://subsidydropoff.com | grep -iE 'content-security-policy|strict-t
 
 ## Before you call it launched
 
-- [ ] Re-verify the Rev. Proc. 2026-26 bracket values against the primary IRS PDF
-      (currently `secondary-concordant` — see the verification table in `README.md`)
-- [ ] Populate the Alaska and Hawaii poverty guidelines; the engine refuses those
-      regions until you do
+- [x] Verify the 2027 IRS table and all three regional HHS poverty guidelines against published sources (see ACCURACY.md).
 - [ ] Spot-check ten PUF-derived benchmarks against HealthCare.gov window shopping,
       target ±$2/month
 - [ ] Confirm the disclaimer renders above the fold on mobile

@@ -1,3 +1,4 @@
+import enrollment from "../public/oe-window.json"
 import Link from "next/link"
 import Image from "next/image"
 import { SiteHeader } from "@/components/site-header"
@@ -15,6 +16,17 @@ export default function HomePage() {
       <SiteHeader />
       <main className="flex-1">
         <Hero />
+        <section id="oe" className="mx-auto max-w-6xl space-y-3 px-6 py-8 text-sm">
+          <h2 className="font-serif text-2xl">2027 Marketplace enrollment</h2>
+          <p>Checked <time dateTime={enrollment.asOf}>{new Date(`${enrollment.asOf}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</time>.</p>
+          <p>{enrollment.datesSummary}</p>
+          <p>{enrollment.ruleStatus}</p>
+          <p>{enrollment.stateNote} <a className="underline" href={enrollment.stateSource}>Find your Marketplace</a>.</p>
+          <p><a className="underline" href="/index.html#income-check">Check your household’s federal income limits</a></p>
+          <p><a className="underline" href={enrollment.primarySource}>HealthCare.gov deadlines</a>
+            {" · "}<a className="underline" href={enrollment.sources.courtOrder}>Court order</a>
+            {" · "}<a className="underline" href={enrollment.sources.oralArgument}>Fourth Circuit argument</a></p>
+        </section>
         <Stakes />
         <div id="demo" className="scroll-mt-16">
           <LiveDemo />

@@ -531,7 +531,8 @@ describe("plan year parameters", () => {
   });
 
   it("flags the PY2027 open-enrollment end date as contested", () => {
-    expect(PY27.openEnrollment.end).toBe("2027-01-15");
+    expect(PY27.openEnrollment.end).toBeNull();
+    expect(PY27.openEnrollment.publishedEnd).toBe("2027-01-15");
     expect(PY27.openEnrollment.endIsContested).toBe(true);
     expect(PY27.openEnrollment.note).toMatch(/vacated/);
     expect(PY26.openEnrollment.endIsContested).toBe(false);

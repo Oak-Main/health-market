@@ -139,8 +139,10 @@ export interface OpenEnrollmentWindow {
   readonly start: string;
   /** ISO date: last day to enroll for coverage effective Jan 1. */
   readonly januaryFirstDeadline: string;
-  /** Currently published federal closing date, or null if none is available. */
+  /** Settled closing date. Null during a legal challenge for older API clients. */
   readonly end: string | null;
+  /** Currently published closing date, read together with endIsContested and note. */
+  readonly publishedEnd: string;
   readonly endIsContested: boolean;
   readonly note?: string;
 }

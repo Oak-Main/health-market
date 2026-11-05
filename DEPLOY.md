@@ -2,11 +2,10 @@
 
 ## Status
 
-The deploy pipeline is complete and committed. It has **not** been executed, because
-the environment it was authored in has no Cloudflare credentials and its egress policy
-denies `api.cloudflare.com` outright (`connect_rejected: gateway answered 403 to
-CONNECT`). Two secrets are the only thing standing between the current state and a
-live site.
+Cloudflare Pages serves `subsidydropoff.com` from `main`. A push to the separate
+repository default branch creates a branch preview. Promote a reviewed revision
+to `main` to release it. The existing weekly job checks out `main`, verifies it,
+and refreshes the production data from that exact commit.
 
 ## One-time setup
 
@@ -39,7 +38,7 @@ GitHub → Actions → "Deploy to Cloudflare Pages" → Run workflow
 ```
 
 The workflow creates the Pages project (`subsidy-dropoff`) on first run. It will
-typecheck, run the 117 tests, pull the CMS public use files, derive benchmark shards,
+typecheck, run the test suite, pull the CMS public use files, derive benchmark shards,
 refuse to proceed if synthetic fixture data is present, and deploy.
 
 ### 4. Attach the domain

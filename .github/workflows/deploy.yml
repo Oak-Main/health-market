@@ -27,7 +27,7 @@ on:
     - cron: "0 11 * * 1"
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-${{ github.event_name == 'schedule' && 'refs/heads/main' || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -37,8 +37,16 @@ jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.revision.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Scheduled events originate on the repository default branch. Pages serves main.
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.sha }}
+      - name: Record the revision being verified
+        id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -62,6 +70,8 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify.outputs.revision }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -85,7 +95,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy public --project-name=subsidy-dropoff --branch=${{ github.ref_name }}
+          command: pages deploy public --project-name=subsidy-dropoff --branch=${{ github.event_name == 'schedule' && 'main' || github.ref_name }}
 
       # Nothing upstream of this step pages anyone on its own — a failed run
       # or an empty-shard deploy would otherwise only be visible to someone

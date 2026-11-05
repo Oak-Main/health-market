@@ -138,7 +138,7 @@ function renderProvenance(d) {
   if (p.benchmarkSource) bits.push(`Premiums: ${esc(p.benchmarkSource)}.`);
   if (oe.endIsContested) {
     bits.push(
-      `HealthCare.gov lists ${esc(oe.start)} through ${esc(oe.end)}. <a href="#oe">See coverage dates and the appeal status</a>.`,
+      `${oe.publishedEnd ? `HealthCare.gov lists ${esc(oe.start)} through ${esc(oe.publishedEnd)}. ` : ""}<a href="#oe">See coverage dates and the appeal status</a>.`,
     );
   }
   $("prov").innerHTML = bits.join(" ");

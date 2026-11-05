@@ -9,7 +9,9 @@ the page shows no date rather than a guess.
 Machine-readable mirror of the Open Enrollment row: `public/oe-window.json`
 (pinned together with this file and the rendered page by
 `test/oe-window.test.ts`). The rule-status line has its own mirror block,
-`subsidyStatus`, in the same file.
+`subsidyStatus`, in the same file. In the estimate API, `openEnrollment.publishedEnd`
+reports the closing date currently published by HealthCare.gov. While an appeal
+is pending, the legacy `end` field stays null and `endIsContested` carries the caveat.
 
 | # | Claim (as rendered) | Value | Verified on | Primary source | Next review | Owner |
 |---|---|---|---|---|---|---|

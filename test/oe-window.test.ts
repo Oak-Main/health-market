@@ -51,7 +51,8 @@ describe("2027 federal open enrollment", () => {
   it("uses the same public end date and appeal caveat in the estimate API", () => {
     const info = getPlanYear(2027).openEnrollment;
     expect(info.start).toBe(oe.window.starts);
-    expect(info.end).toBe(oe.window.ends);
+    expect(info.end).toBeNull();
+    expect(info.publishedEnd).toBe(oe.window.ends);
     expect(info.januaryFirstDeadline).toBe(oe.januaryCoverageDeadline);
     expect(info.endIsContested).toBe(true);
     expect(info.note).toContain(oe.ruleStatus);

@@ -92,6 +92,7 @@ export interface Provenance {
     start: string
     januaryFirstDeadline: string
     end: string | null
+    publishedEnd?: string
     endIsContested: boolean
     note?: string
   }

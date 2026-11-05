@@ -235,6 +235,7 @@ const PY2026: PlanYearParameters = {
     start: "2025-11-01",
     januaryFirstDeadline: "2025-12-15",
     end: "2026-01-15",
+    publishedEnd: "2026-01-15",
     endIsContested: false,
     note: "Completed. 23.1M plan selections, -5% year over year.",
   },
@@ -261,7 +262,8 @@ const PY2027: PlanYearParameters = {
   openEnrollment: {
     start: enrollment.window.starts,
     januaryFirstDeadline: enrollment.januaryCoverageDeadline,
-    end: enrollment.window.ends,
+    end: enrollment.endIsContested ? null : enrollment.window.ends,
+    publishedEnd: enrollment.window.ends,
     endIsContested: enrollment.endIsContested,
     note: `${enrollment.datesSummary} ${enrollment.ruleStatus} ${enrollment.stateNote}`,
   },

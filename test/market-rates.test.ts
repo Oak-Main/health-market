@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
+import { validateShard } from "../src/data/shard";
 import { marketBenchmark, validateMarket, type MarketRates } from "../src/data/market-rates";
 import { parseCsvTable, readRateRows } from "../src/etl/csv";
 
@@ -45,6 +47,7 @@ describe("2027 silver ranking", () => {
     const source = '\ufeffPlanId,Age,Comment,IndividualRate\r\nABC,40,"a, b\n""c""",120.50\r\n';
     const keys = ["PlanId", "Age", "Comment", "IndividualRate"];
     expect([...readRateRows(source, keys)]).toEqual(parseCsvTable(source, keys).rows);
+    expect([...readRateRows("CMS rate export\r\nDisplayed records,1\r\n" + source, keys)]).toEqual(parseCsvTable(source, keys).rows);
     expect(() => [...readRateRows(source, ["Missing"])]).toThrow();
   });
 });
@@ -58,4 +61,17 @@ it("displays the benchmark, estimated credit and resulting premium to the cent",
   } };
   const html = runInNewContext(script + "\nrenderResult(response)", { document: page, response });
   for (const value of ["$768.06", "$390.48", "$377.58"]) expect(html).toContain(value);
+});
+
+it("references the current calculator bytes from the public homepage", () => {
+  const bytes = readFileSync(new URL("../public/app.js", import.meta.url));
+  const revision = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+  const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
+  expect(html).toContain(`<script src="/app.js?v=${revision}" type="module">`);
+});
+
+it("requires ZIP-specific pricing data in every 2027 shard", () => {
+  const legacy = { planYear: 2027, generated: "", sourceFile: "CMS", sourcePublished: "", zipToCounties: {}, counties: {} };
+  expect(validateShard(legacy)).toContain("Unexpected market schema for plan year");
+  expect(validateShard({ ...legacy, planYear: 2026 })).toEqual([]);
 });

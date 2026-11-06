@@ -48,7 +48,8 @@ export class ShardIntegrityError extends Error {
 /** Validate a shard's internal consistency before it is served. */
 export function validateShard(shard: BenchmarkShard): string[] {
   const problems: string[] = shard.market ? validateMarket(shard.market, shard.zipToCounties) : [];
-  if (shard.market && shard.planYear !== 2027) problems.push("Unexpected market schema for plan year");
+  if (Boolean(shard.market) !== (shard.planYear === 2027)) problems.push("Unexpected market schema for plan year");
+  if (shard.market && Object.keys(shard.counties).length) problems.push("Mixed county and ZIP-specific pricing schemas");
 
   for (const [zip, counties] of Object.entries(shard.zipToCounties)) {
     if (!/^\d{5}$/.test(zip)) problems.push(`ZIP "${zip}" is not five digits.`);

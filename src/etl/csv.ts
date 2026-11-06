@@ -84,16 +84,19 @@ export function parseCsv(input: string): string[][] {
 
 /** Project the large Rate PUF one row at a time; preserve the same CSV quoting and BOM rules. */
 export function* readRateRows(input: string, columns: readonly string[]): Generator<Record<string, string>> {
-  const rows = csvRows(input);
-  const header = rows.next().value?.map((s: string) => s.trim());
-  if (!header) throw new CsvError("Empty Rate PUF");
-  const indices = columns.map(name => header.indexOf(name));
-  if (indices.includes(-1)) throw new CsvError("Missing required Rate PUF column: " + columns.filter((_, i) => indices[i] === -1).join(", "));
-  for (const row of rows) {
+  let indices: number[] | undefined;
+  for (const row of csvRows(input)) {
+    if (!indices) {
+      const header = row.map(cell => cell.trim());
+      const positions = columns.map(name => header.indexOf(name));
+      if (!positions.includes(-1)) indices = positions;
+      continue;
+    }
     const record: Record<string, string> = {};
-    columns.forEach((name, i) => { record[name] = (row[indices[i]!] ?? "").trim(); });
+    for (const [i, name] of columns.entries()) record[name] = (row[indices[i]!] ?? "").trim();
     yield record;
   }
+  if (!indices) throw new CsvError("Rate PUF is missing its required header: " + columns.join(", "));
 }
 
 export interface CsvTable {

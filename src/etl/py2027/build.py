@@ -48,8 +48,13 @@ def checked_inputs(directory, offline):
             if hashlib.file_digest(stream, "sha256").hexdigest() != source["sha256"]:
                 raise ValueError(f"{key}: CMS source changed; reconcile against the Marketplace before release")
     for key, source in RELEASE["geography"].items():
-        if not offline:
-            download(source["publicUrl"], directory / (key + ".json"))
+        path = directory / (key + ".json")
+        if offline:
+            with path.open("rb") as stream:
+                if hashlib.file_digest(stream, "sha256").hexdigest() != source["observedFileSha256"]:
+                    raise ValueError(f"{key}: offline snapshot differs from the registered original")
+        else:
+            download(source["publicUrl"], path)
 
 
 def canonical_hash(rows):
@@ -114,7 +119,11 @@ def medical_plans(directory):
             share = Decimal(r["EHBPercentTotalPremium"])
             if not 0 < share <= 1 or pid in attrs:
                 raise ValueError(f"Invalid or duplicate standard silver plan {pid}")
-            attrs[pid] = (r["IssuerId"], r["ServiceAreaId"], share, r["ChildOnlyOffering"])
+            # Every silver filing in this release accepts both enrollment types. A new
+            # type needs composition-specific Marketplace comparisons before publication.
+            if r["ChildOnlyOffering"] != "Allows Adult and Child-Only":
+                raise ValueError(f"Unverified silver household offering in {pid}: {r['ChildOnlyOffering']}")
+            attrs[pid] = (r["IssuerId"], r["ServiceAreaId"], share)
 
     covered = defaultdict(set)
     with table(directory, "benefits", ["PlanId", "BenefitName", "IsCovered"]) as rows:
@@ -342,7 +351,7 @@ def build(directory, output):
                 if not eligible:
                     return None
                 for pid in eligible:
-                    if (pid, area) not in plans or attrs[pid][3] != "Allows Adult and Child-Only":
+                    if (pid, area) not in plans:
                         return None
                     # The Landscape lists a representative area in split counties. Reconcile all
                     # listed prices; the official ZIP/county rate-area file selects the local PUF table.

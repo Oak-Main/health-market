@@ -32,15 +32,15 @@
   "geography": {
     "county-zips": {
       "url": "https://marketplace.api.healthcare.gov/api/v1/data/county-zips?year=2027",
-      "sha256": "2e0415818ddf0b4f671c97801b7f1be076ecb041530f793250bde5271e7f722d",
       "publicUrl": "https://marketplace-int.api.healthcare.gov/api/v1/data/county-zips?year=2027",
-      "canonicalSha256": "f2f5475d51beb0757e7eddfedf174f38604a6e2219943f0d03c13bd0b00c3195"
+      "canonicalSha256": "f2f5475d51beb0757e7eddfedf174f38604a6e2219943f0d03c13bd0b00c3195",
+      "observedFileSha256": "2e0415818ddf0b4f671c97801b7f1be076ecb041530f793250bde5271e7f722d"
     },
     "rate-areas": {
       "url": "https://marketplace.api.healthcare.gov/api/v1/data/rate-areas?year=2027",
-      "sha256": "fe570994473a0b5bdc631209171faf0570af1c241aaacffb63a9bd9cae4a966e",
       "publicUrl": "https://marketplace-int.api.healthcare.gov/api/v1/data/rate-areas?year=2027",
-      "canonicalSha256": "81639dda49b1c8d63f2c8c33b8e4d26b8c1f0baa06ddef9abdf746fd163ceb65"
+      "canonicalSha256": "81639dda49b1c8d63f2c8c33b8e4d26b8c1f0baa06ddef9abdf746fd163ceb65",
+      "observedFileSha256": "fe570994473a0b5bdc631209171faf0570af1c241aaacffb63a9bd9cae4a966e"
     }
   },
   "minimumCounties": 1900,

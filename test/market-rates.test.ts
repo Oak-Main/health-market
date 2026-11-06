@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
@@ -58,4 +59,11 @@ it("displays the benchmark, estimated credit and resulting premium to the cent",
   } };
   const html = runInNewContext(script + "\nrenderResult(response)", { document: page, response });
   for (const value of ["$768.06", "$390.48", "$377.58"]) expect(html).toContain(value);
+});
+
+it("references the current calculator bytes from the public homepage", () => {
+  const bytes = readFileSync(new URL("../public/app.js", import.meta.url));
+  const revision = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+  const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
+  expect(html).toContain(`<script src="/app.js?v=${revision}" type="module">`);
 });

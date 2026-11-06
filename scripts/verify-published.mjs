@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { releaseYears } from './etl.mjs';
 
@@ -7,6 +8,8 @@ const origin = 'https://subsidydropoff.com';
 const local = path => JSON.parse(readFileSync(new URL('../' + path, import.meta.url), 'utf8'));
 const enrollment = local('public/oe-window.json');
 const cases = local('src/etl/py2027/marketplace-cases.json');
+const script = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+const scriptPath = '/app.js?v=' + createHash('sha256').update(script).digest('hex').slice(0, 16);
 const deadline = Date.now() + 240_000;
 async function get(path, options, status = 200) {
   const remaining = deadline - Date.now();
@@ -23,8 +26,10 @@ function quote(planYear, zip, countyFips, ages = [40], status = 200) {
 }
 async function verify() {
   assert.deepEqual(await (await get('/oe-window.json')).json(), enrollment);
-  assert.ok((await (await get('/')).text()).includes(enrollment.ruleStatus));
-  assert.equal(await (await get('/app.js')).text(), readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), 'Published calculator script differs from the verified release');
+  const html = await (await get('/')).text();
+  assert.ok(html.includes(enrollment.ruleStatus));
+  assert.ok(html.includes(`<script src="${scriptPath}" type="module">`), 'Published homepage references a previous calculator script');
+  assert.equal(await (await get(scriptPath)).text(), script, 'Published versioned calculator script differs from the verified release');
   for (const year of releaseYears) {
     const path = `data/${year}`;
     const manifest = local(`public/${path}/index.json`);

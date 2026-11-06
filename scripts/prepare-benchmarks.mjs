@@ -1,7 +1,8 @@
+import { etlCommand, releaseYears } from './etl.mjs';
 import { spawn } from 'node:child_process';
 import lockfile from 'proper-lockfile';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,9 +11,6 @@ const project = fileURLToPath(new URL('../', import.meta.url));
 const dataRoot = join(project, 'public', 'data');
 const projectId = createHash('sha256').update(project).digest('hex');
 const lock = join(tmpdir(), `subsidy-benchmark-${projectId}.lock`);
-const year = process.env.PLAN_YEAR || '2026';
-if (!/^\d{4}$/.test(year)) throw new Error('Expected a four-digit plan year');
-const live = join(dataRoot, year);
 const nodeEnv = { ...process.env, NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=6500' };
 let activeChild;
 let interrupted;
@@ -20,16 +18,16 @@ function interrupt(signal) {
   interrupted = signal;
   activeChild?.kill(signal);
 }
-function run(script, ...args) {
+function run(command, args) {
   if (interrupted) throw new Error(`Benchmark refresh interrupted by ${interrupted}`);
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['--import', 'tsx', script, ...args], { cwd: project, stdio: 'inherit', env: nodeEnv });
+    const child = spawn(command, args, { cwd: project, stdio: 'inherit', env: nodeEnv });
     activeChild = child;
     child.once('error', reject);
     child.once('close', (code, signal) => {
       activeChild = undefined;
       if (code === 0 && !interrupted) resolve();
-      else reject(new Error(`${script} failed (${signal || code})`));
+      else reject(new Error(`${command} failed (${signal || code})`));
     });
   });
 }
@@ -45,19 +43,28 @@ try {
   work = mkdtempSync(join(project, '.benchmark-refresh-'));
   const staged = join(work, 'staged');
   const backup = join(work, 'previous');
-  await run('src/etl/run.ts', `--plan-year=${year}`, `--out=${staged}`);
-  await run('src/etl/verify.ts', staged, year);
-  mkdirSync(dataRoot, { recursive: true });
-  if (existsSync(live)) renameSync(live, backup);
+  const verify = (root, year) => run(process.execPath, ['--import', 'tsx', 'src/etl/verify.ts', root, year]);
+  for (const year of releaseYears) {
+    const [command, args] = etlCommand([`--plan-year=${year}`, `--out=${staged}`]);
+    await run(command, args);
+    await verify(staged, year);
+  }
+  // Keep the two releases together and preserve any unrelated historical assets.
+  if (existsSync(dataRoot)) {
+    for (const name of readdirSync(dataRoot)) {
+      if (!releaseYears.includes(name)) cpSync(join(dataRoot, name), join(staged, name), { recursive: true });
+    }
+    renameSync(dataRoot, backup);
+  }
   try {
-    renameSync(join(staged, year), live);
-    await run('src/etl/verify.ts', dataRoot, year);
+    renameSync(staged, dataRoot);
+    for (const year of releaseYears) await verify(dataRoot, year);
   } catch (error) {
     // Retain the backup if recovery itself fails.
     preserveBackup = true;
     try {
-      if (existsSync(live)) renameSync(live, join(work, 'rejected'));
-      if (existsSync(backup)) renameSync(backup, live);
+      if (existsSync(dataRoot)) renameSync(dataRoot, join(work, 'rejected'));
+      if (existsSync(backup)) renameSync(backup, dataRoot);
       preserveBackup = false;
     } catch (recoveryError) {
       throw new AggregateError([error, recoveryError], `Benchmark recovery failed. Inspect the backup at ${backup}.`, { cause: error });

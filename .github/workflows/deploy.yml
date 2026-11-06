@@ -16,11 +16,6 @@ on:
       - main
       - "claude/aca-marketplace-subsidy-estimator-**"
   workflow_dispatch:
-    inputs:
-      planYear:
-        description: "Plan year to build benchmark data for"
-        required: false
-        default: "2026"
   schedule:
     # Weekly refresh. CMS revises public use files in-year, and this keeps the
     # deployed premiums from silently drifting away from the published files.
@@ -86,7 +81,6 @@ jobs:
       - name: Build with verified fresh CMS data and smoke-test before publication
         env:
           NODE_OPTIONS: --max-old-space-size=6500
-          PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
           NEXT_TELEMETRY_DISABLED: "1"
         run: npm run check:production
 
@@ -99,8 +93,6 @@ jobs:
 
       - name: Verify the published custom domain
         if: github.ref_name == 'main' || github.event_name == 'schedule'
-        env:
-          PLAN_YEAR: ${{ github.event.inputs.planYear || '2026' }}
         run: node scripts/verify-published.mjs
 
       # Nothing upstream of this step pages anyone on its own — a failed run

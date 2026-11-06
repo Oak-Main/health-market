@@ -74,3 +74,7 @@ Hawaii are no longer refused at runtime.
 3. If a source cannot be reached, remove the date from the page rather than
    leaving a stale one; note the incident here.
 4. Recheck the Fourth Circuit and CMS immediately if an opinion, stay, or new Marketplace guidance appears. Record the date, affected provision, and published enrollment window together.
+
+## 2027 automatic ZIP premiums — November 5, 2026 Pacific
+
+The PY2027 release matches 21 synthetic household SLCSP responses from the official Marketplace API by plan ID and monthly EHB premium, including Anchorage, Honolulu, Miami, Michigan, and both counties of 75034. The income-only endpoint needs no local premium. A separate user-entered premium remains labeled in the response. The source register, coverage denominators and release instructions are in DEPLOY.md.

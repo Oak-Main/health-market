@@ -60,13 +60,22 @@ Running the ETL in the pipeline means:
 
 - Premium data is rebuilt from the published files on every deploy, so it cannot
   silently drift from source.
-- The weekly `schedule` trigger picks up CMS's in-year revisions without anyone
-  remembering to do it.
+- The weekly schedule rebuilds both releases. A change to a registered 2027 source or a Marketplace comparison stops promotion until it has been reviewed.
 - A new plan year requires a reviewed, year-specific source registry before it can ship.
 
-Both `npm run build` for Next.js and the Pages release workflow run `npm run benchmarks:prepare`. The version-controlled snapshot is historical. To refresh a local checkout or development server, run the same preparation command. To verify a prepared directory separately, use `npm run etl:verify -- public/data 2026`.
+Both `npm run build` for Next.js and the Pages release workflow run `npm run benchmarks:prepare`. The version-controlled snapshot is historical. To refresh a local checkout or development server, run the same preparation command. To verify a prepared directory, run `npm run etl:verify -- public/data 2026` and `npm run etl:verify -- public/data 2027`.
 
 The workflow builds into an empty temporary directory. It promotes the dataset only after every listed shard passes integrity and source checks. A failed or empty refresh preserves the prior deployment.
+
+## Plan year 2027
+
+The source register in `src/etl/py2027/sources.json` identifies the reviewed medical and dental Landscape workbooks, four CMS PUFs and the two Marketplace bulk geography endpoints. A cold build needs Node 22+, Python 3.11+ and HTTPS to CMS and HealthCare.gov. Run `npm run etl -- --plan-year=2027 --out=./staging` for a standalone build. For an offline replay, add `--from-dir=./inputs` containing the six archives named by their register keys plus `county-zips.json` and `rate-areas.json`. The ETL validates the archive hashes and canonical geographic relationships. A change in row order in the geography exports is harmless.
+
+The verified November 5 Pacific release contains 2,019 federal Landscape counties, 2,019 counties with derived benchmarks, and 2,019 ZIP-reachable counties. The Marketplace crosswalk contains 40,946 ZIPs and 56,275 ZIP/county pairs. Federal individual medical plans cover 21,836 ZIPs and 31,816 pairs across 29 states. The remaining 24,459 pairs lie outside the source Landscape. The manifest records missing-source and reconciliation exclusions separately.
+
+The pipeline reconciles all standard on-exchange silver plans with the Service Area PUF and the individual medical Landscape, then selects the filed rates for each ZIP/county rating area. It ranks household essential-health-benefit premiums after rounding the per-person EHB amount. Households with children under 19 can require the second-lowest standalone dental EHB premium. The engine prices age and family-tier dental filings and adds that amount only to silver plans missing pediatric dental coverage. The 2027 release covers the silver benchmark. The optional bronze field is null.
+
+The 21 comparison fixtures record synthetic households checked against the CMS Marketplace API on November 6 UTC. Seven of these comparisons run against HealthCare.gov again before publication. The application serves local shards and sends no visitor information to CMS. The post-publication gate compares the staged manifest and actual shard for each year and exercises the live estimator, county selector and income check. Source references: [CMS public use files](https://www.cms.gov/marketplace/resources/data/public-use-files), [HealthCare.gov medical Landscape](https://www.healthcare.gov/health-plan-information/), [dental Landscape](https://www.healthcare.gov/dental-plan-information/), [Marketplace API](https://developer.cms.gov/marketplace-api/api-spec).
 
 ## Manual deploy
 

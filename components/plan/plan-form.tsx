@@ -13,7 +13,7 @@ import {
   type ValidationProblem,
 } from "@/lib/estimate"
 
-const PLAN_YEARS = [2026] as const
+const PLAN_YEARS = [2027, 2026] as const
 
 interface FormState {
   zip: string
@@ -32,7 +32,7 @@ function initialState(params: URLSearchParams): FormState {
     householdSize: params.get("household") ?? String(Math.max(ages.length, 1)),
     income: params.get("income") ?? "",
     ages,
-    planYear: 2026,
+    planYear: params.get("planYear") === "2026" ? 2026 : 2027,
   }
 }
 

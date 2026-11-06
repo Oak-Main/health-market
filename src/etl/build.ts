@@ -117,7 +117,7 @@ export function indexPlanAttributes(rows: readonly CsvRow[]): Map<string, PlanAt
  * on, and the benchmark for premium tax credit purposes is the non-tobacco rate.
  */
 export function buildPlanRates(
-  rows: readonly CsvRow[],
+  rows: Iterable<CsvRow>,
   attributes: ReadonlyMap<string, PlanAttribute>,
   planYear: number,
 ): Map<string, NormalisedPlanRate> {

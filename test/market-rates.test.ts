@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 import { marketBenchmark, validateMarket, type MarketRates } from "../src/data/market-rates";
 import { parseCsvTable, readRateRows } from "../src/etl/csv";
@@ -45,4 +47,15 @@ describe("2027 silver ranking", () => {
     expect([...readRateRows(source, keys)]).toEqual(parseCsvTable(source, keys).rows);
     expect(() => [...readRateRows(source, ["Missing"])]).toThrow();
   });
+});
+
+it("displays the benchmark, estimated credit and resulting premium to the cent", () => {
+  const script = readFileSync(new URL("../public/app.js", import.meta.url), "utf8");
+  const page = { getElementById: () => ({ addEventListener() {} }) };
+  const response = { result: {
+    benchmark: { monthlySlcsp: 76806 }, ptc: { monthlyPtc: 39048, fpl: {}, workings: [] },
+    cliff: { workings: [] }, csr: { variant: "standard-silver" },
+  } };
+  const html = runInNewContext(script + "\nrenderResult(response)", { document: page, response });
+  for (const value of ["$768.06", "$390.48", "$377.58"]) expect(html).toContain(value);
 });

@@ -5,7 +5,7 @@ import { AlertTriangle, ArrowUpRight, ChevronRight, MapPin } from "lucide-react"
 import type { EstimateResponse, EstimateResult, Unavailable, WorkingStep } from "@/lib/estimate"
 import { CliffChart } from "@/components/cliff-chart"
 import { Figure } from "@/components/ui/figure"
-import { formatCents, formatCentsWhole, formatDollars } from "@/lib/format"
+import { formatCents, formatCentsWhole } from "@/lib/format"
 
 interface PlanResultsProps {
   response: EstimateResponse
@@ -106,7 +106,7 @@ function SuccessView({
               Your subsidy across income
             </span>
             <span className="font-mono text-xs text-muted-foreground">
-              {formatDollars(ptc.annualBenchmarkPremium / 100)} benchmark / yr
+              {formatCents(result.benchmark.monthlySlcsp)} benchmark / mo
             </span>
           </div>
           <CliffChart

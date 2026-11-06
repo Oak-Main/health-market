@@ -112,9 +112,9 @@ function renderResult(d) {
   return `
     <div class="headline ${tone ? `headline--${tone}` : ""}">${headline}</div>
     <dl class="grid">
-      <div class="cell"><dt>Benchmark plan</dt><dd>${usd(benchmark.monthlySlcsp)}<span class="hint">/mo</span></dd></div>
+      <div class="cell"><dt>Benchmark plan</dt><dd>${usd(benchmark.monthlySlcsp, { cents: true })}<span class="hint">/mo</span></dd></div>
       <div class="cell"><dt>Benchmark after estimated credit</dt><dd>${usd(benchmark.monthlySlcsp - ptc.monthlyPtc, { cents: true })}<span class="hint">/mo</span></dd></div>
-      <div class="cell"><dt>Estimated credit</dt><dd>${usd(ptc.monthlyPtc)}<span class="hint">/mo</span></dd></div>
+      <div class="cell"><dt>Estimated credit</dt><dd>${usd(ptc.monthlyPtc, { cents: true })}<span class="hint">/mo</span></dd></div>
       <div class="cell"><dt>% of poverty line</dt><dd>${ptc.fpl.form8962Percent > 400 ? "over 400" : ptc.fpl.form8962Percent}%</dd></div>
       <div class="cell"><dt>Your share of income</dt><dd>${(ptc.applicablePercentage / 100).toFixed(2)}%</dd></div>
       <div class="cell"><dt>Cost-sharing level</dt><dd>${esc(csr.variant.replace("csr-", "").replace("-", " "))}</dd></div>

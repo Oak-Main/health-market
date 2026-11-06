@@ -24,6 +24,7 @@ function quote(planYear, zip, countyFips, ages = [40], status = 200) {
 async function verify() {
   assert.deepEqual(await (await get('/oe-window.json')).json(), enrollment);
   assert.ok((await (await get('/')).text()).includes(enrollment.ruleStatus));
+  assert.equal(await (await get('/app.js')).text(), readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), 'Published calculator script differs from the verified release');
   for (const year of releaseYears) {
     const path = `data/${year}`;
     const manifest = local(`public/${path}/index.json`);

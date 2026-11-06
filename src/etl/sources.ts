@@ -46,8 +46,8 @@ export const BENCHMARK_SOURCE_RELEASE = {
 /**
  * Datasets required to derive the benchmark for federally-facilitated states.
  *
- * The production benchmark pipeline below uses 2026 files. CMS has published
- * 2027 files, but that year needs its own validated sources and ZIP coverage.
+ * This registry supports the historical 2026 pipeline. The 2027 PUFs and
+ * year-specific Marketplace geography are registered in py2027/sources.json.
  *
  * 2026-09-28 re-point: CMS retired the Socrata /resource/ API surface on
  * healthdata.gov and data.healthcare.gov (the portals moved to DKAN). Both

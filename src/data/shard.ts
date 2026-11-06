@@ -1,24 +1,5 @@
-/**
- * The built benchmark dataset: shard format and the provider that reads it.
- *
- * THE INVARIANT THAT MAKES THIS COMPACT
- * -------------------------------------
- * Every plan in a state is rated off the SAME age curve — either the federal
- * default standard age curve or a state-specific one, but uniform within the
- * state (45 CFR 147.102). So if plan A costs 0.9x plan B at age 21, it costs
- * 0.9x plan B at every age.
- *
- * Consequence: the identity of the second-lowest-cost silver plan does NOT
- * depend on household composition. We can precompute, per county, the single
- * benchmark plan and its full age-rate table, and then price any household
- * exactly by summing that plan's rates for the rated members.
- *
- * The ETL asserts this invariant rather than assuming it: it re-ranks silver
- * plans at several ages and fails the build if the ordering ever differs.
- * If a state files non-uniform curves, we find out at build time instead of
- * quoting a wrong benchmark to a user.
- */
-
+/** Historical county benchmarks and ZIP-specific Marketplace offerings. */
+import { marketBenchmark, validateMarket, type MarketRates } from "./market-rates";
 import {
   type BenchmarkFreshness,
   type BenchmarkProvider,
@@ -54,6 +35,7 @@ export interface BenchmarkShard {
   /** ZIP -> candidate county FIPS codes. Multi-entry means an ambiguous ZIP. */
   readonly zipToCounties: Readonly<Record<string, readonly string[]>>;
   readonly counties: Readonly<Record<string, CountyBenchmark>>;
+  readonly market?: MarketRates;
 }
 
 export class ShardIntegrityError extends Error {
@@ -65,13 +47,15 @@ export class ShardIntegrityError extends Error {
 
 /** Validate a shard's internal consistency before it is served. */
 export function validateShard(shard: BenchmarkShard): string[] {
-  const problems: string[] = [];
+  const problems: string[] = shard.market ? validateMarket(shard.market, shard.zipToCounties) : [];
+  if (shard.market && shard.planYear !== 2027) problems.push("Unexpected market schema for plan year");
 
   for (const [zip, counties] of Object.entries(shard.zipToCounties)) {
     if (!/^\d{5}$/.test(zip)) problems.push(`ZIP "${zip}" is not five digits.`);
     if (counties.length === 0) problems.push(`ZIP ${zip} maps to no county.`);
+    if (new Set(counties).size !== counties.length && shard.market) problems.push(`Duplicate county for ${zip}`);
     for (const fips of counties) {
-      if (!shard.counties[fips]) {
+      if (!(shard.market ? shard.market.counties[fips] : shard.counties[fips])) {
         problems.push(`ZIP ${zip} references unknown county FIPS ${fips}.`);
       }
     }
@@ -117,6 +101,10 @@ export interface ShardIndex {
   readonly shardCount: number;
   readonly countiesBuilt: number;
   readonly countiesSkipped: number;
+  readonly sourceCountyCount?: number;
+  readonly reachableCounties?: number;
+  readonly pricedZipCountyPairs?: number;
+  readonly pricedZips?: number;
   readonly prefixes: readonly string[];
 }
 
@@ -198,7 +186,7 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
             `ZIP ${zip} spans ${candidates.length} counties, which may sit in ` +
             `different rating areas. Select a county to get an exact benchmark.`,
           candidateCounties: candidates.map((f) => {
-            const c = shard.counties[f];
+            const c = shard.market?.counties[f] ?? shard.counties[f];
             return { fips: f, name: c?.countyName ?? "Unknown", state: c?.stateCode ?? "" };
           }),
         };
@@ -206,8 +194,8 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       fips = candidates[0]!;
     }
 
-    const county = candidates.includes(fips) ? shard.counties[fips] : undefined;
-    if (!county) {
+    const geography = shard.market?.counties[fips] ?? shard.counties[fips];
+    if (!candidates.includes(fips) || !geography) {
       return {
         kind: "unavailable",
         reason: "unknown-zip",
@@ -215,13 +203,17 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       };
     }
 
-    if (!usesFederalData(county.stateCode, request.planYear)) {
-      const marketplace = lookupMarketplace(county.stateCode, request.planYear);
+    if (!usesFederalData(geography.stateCode, request.planYear)) {
+      const marketplace = lookupMarketplace(geography.stateCode, request.planYear);
+      if (!marketplace) return {
+        kind: "unavailable", reason: "dataset-not-loaded",
+        message: "This location is outside the verified federal Marketplace pricing data.",
+      };
       return {
         kind: "unavailable",
         reason: "state-based-exchange",
         message:
-          `${marketplace?.name ?? county.stateCode} runs its own Marketplace, so its ` +
+          `${marketplace?.name ?? geography.stateCode} runs its own Marketplace, so its ` +
           `plans and rates are not in the federal public use files.` +
           (marketplace?.hasStateSubsidy
             ? ` ${marketplace.name} also offers its own premium assistance on top of ` +
@@ -240,6 +232,26 @@ export class StaticBenchmarkProvider implements BenchmarkProvider {
       };
     }
 
+    if (shard.market) {
+      const group = shard.market.locations[zip]?.[fips];
+      if (group === undefined) return {
+        kind: "unavailable", reason: "dataset-not-loaded",
+        message: `A verified ${request.planYear} benchmark is unavailable for ZIP ${zip} in ${geography.countyName}. Use the income check or your Marketplace benchmark.`,
+      };
+      const childAges = request.members.filter(m => m.seeksCoverage && m.age < 19).map(m => m.age).sort((a, b) => b - a);
+      const benchmark = marketBenchmark(shard.market, group, rated.map(m => m.age), childAges);
+      if (!benchmark) return {
+        kind: "unavailable", reason: "dataset-not-loaded",
+        message: "This household needs a verified pediatric dental premium for its local silver benchmark. Use the income check or enter the benchmark from your Marketplace.",
+      };
+      return {
+        kind: "quote", planYear: shard.planYear, monthlySlcsp: benchmark.plan.monthly, monthlyLcbp: null,
+        ratingAreaId: benchmark.ratingAreaId, countyFips: fips, region: regionForState(geography.stateCode),
+        slcspPlanId: benchmark.plan.id, sourceFile: shard.sourceFile, sourcePublished: shard.sourcePublished, generated: shard.generated,
+      };
+    }
+
+    const county = shard.counties[fips]!;
     let monthlySlcsp = 0;
     for (const member of rated) {
       const rate = rateFor(county.slcspRateByAge, member.age);

@@ -1,0 +1,236 @@
+[
+  {
+    "zip": "99501",
+    "countyFips": "02020",
+    "state": "AK",
+    "ages": [
+      40
+    ],
+    "planId": "38344AK1100002",
+    "monthlySlcsp": 129893
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      40
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 59171
+  },
+  {
+    "zip": "33130",
+    "countyFips": "12086",
+    "state": "FL",
+    "ages": [
+      40
+    ],
+    "planId": "30252FL0220001",
+    "monthlySlcsp": 73721
+  },
+  {
+    "zip": "75034",
+    "countyFips": "48085",
+    "state": "TX",
+    "ages": [
+      40
+    ],
+    "planId": "87226TX0060011",
+    "monthlySlcsp": 76069
+  },
+  {
+    "zip": "75034",
+    "countyFips": "48121",
+    "state": "TX",
+    "ages": [
+      40
+    ],
+    "planId": "87226TX0060011",
+    "monthlySlcsp": 76806
+  },
+  {
+    "zip": "78666",
+    "countyFips": "48209",
+    "state": "TX",
+    "ages": [
+      40
+    ],
+    "planId": "66252TX0380011",
+    "monthlySlcsp": 69672
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      25,
+      25
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 92970
+  },
+  {
+    "zip": "99501",
+    "countyFips": "02020",
+    "state": "AK",
+    "ages": [
+      47,
+      43,
+      12
+    ],
+    "planId": "38344AK1100002",
+    "monthlySlcsp": 374534
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      47,
+      43,
+      12
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 173597
+  },
+  {
+    "zip": "33130",
+    "countyFips": "12086",
+    "state": "FL",
+    "ages": [
+      47,
+      43,
+      12
+    ],
+    "planId": "30252FL0220001",
+    "monthlySlcsp": 213498
+  },
+  {
+    "zip": "75034",
+    "countyFips": "48085",
+    "state": "TX",
+    "ages": [
+      47,
+      43,
+      12
+    ],
+    "planId": "87226TX0060011",
+    "monthlySlcsp": 220619
+  },
+  {
+    "zip": "99607",
+    "countyFips": "02050",
+    "state": "AK",
+    "ages": [
+      40
+    ],
+    "planId": "38344AK1060002",
+    "monthlySlcsp": 131701
+  },
+  {
+    "zip": "48226",
+    "countyFips": "26163",
+    "state": "MI",
+    "ages": [
+      40,
+      15,
+      12
+    ],
+    "planId": "98185MI0180026",
+    "monthlySlcsp": 135397
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      40,
+      15,
+      10
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 139120
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      40,
+      18,
+      16,
+      12,
+      8
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 185576
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      40,
+      20,
+      19,
+      17,
+      14,
+      13
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 197568
+  },
+  {
+    "zip": "33130",
+    "countyFips": "12086",
+    "state": "FL",
+    "ages": [
+      40,
+      16,
+      14
+    ],
+    "planId": "30252FL0220001",
+    "monthlySlcsp": 169264
+  },
+  {
+    "zip": "78640",
+    "countyFips": "48209",
+    "state": "TX",
+    "ages": [
+      40
+    ],
+    "planId": "20069TX0510133",
+    "monthlySlcsp": 76826
+  },
+  {
+    "zip": "49014",
+    "countyFips": "26025",
+    "state": "MI",
+    "ages": [
+      40
+    ],
+    "planId": "58594MI0030024",
+    "monthlySlcsp": 58753
+  },
+  {
+    "zip": "99501",
+    "countyFips": "02020",
+    "state": "AK",
+    "ages": [
+      0
+    ],
+    "planId": "38344AK1100002",
+    "monthlySlcsp": 77753
+  },
+  {
+    "zip": "96813",
+    "countyFips": "15003",
+    "state": "HI",
+    "ages": [
+      12
+    ],
+    "planId": "60612HI0110013",
+    "monthlySlcsp": 38400
+  }
+]

@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { validateShard } from "../data/shard";
 import {
   buildPlanRates,
+  RATE_PUF_COLUMNS,
   buildShards,
   indexPlanAttributes,
   normalizeGeographicCode,
@@ -25,7 +26,7 @@ import {
   type CountyInput,
   type CsvRow,
 } from "./build";
-import { parseCsvTable, parseMoneyToCents } from "./csv";
+import { parseCsvTable, parseMoneyToCents, readRateRows } from "./csv";
 import { BENCHMARK_SOURCE_RELEASE, DATASETS, fetchText, NetworkBlockedError, type DatasetKey } from "./sources";
 import type { NormalisedPlanRate } from "./slcsp";
 
@@ -108,7 +109,7 @@ async function main(): Promise<void> {
     parseCsvTable(attributesCsv, ["StandardComponentId", "MetalLevel", "MarketCoverage"]).rows,
   );
   const rates = buildPlanRates(
-    parseCsvTable(ratesCsv, ["PlanId", "RatingAreaId", "Age", "IndividualRate"]).rows,
+    readRateRows(ratesCsv, RATE_PUF_COLUMNS),
     attributes,
     args.planYear,
   );

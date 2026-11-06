@@ -19,11 +19,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "benchmarks:prepare": "node scripts/prepare-benchmarks.mjs",
-    "etl": "tsx src/etl/run.ts",
-    "etl:verify": "tsx src/etl/verify.ts",
+    "etl": "node scripts/etl.mjs",
+    "etl:verify": "node --import tsx src/etl/verify.ts",
     "dev:engine": "tsx src/dev-server.ts",
     "check:security-floor": "node scripts/check-security-floor.mjs",
-    "check:production": "npm run build && npm run smoke:production",
+    "check:marketplace": "node scripts/check-marketplace.mjs",
+    "check:production": "npm run build && npm run smoke:production && npm run check:marketplace",
     "smoke:production": "node scripts/smoke-production.mjs"
   },
   "devDependencies": {

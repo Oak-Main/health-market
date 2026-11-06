@@ -1,0 +1,57 @@
+{
+  "planYear": 2027,
+  "ratePublished": "2026-10-28",
+  "verifiedAt": "2026-11-06",
+  "sourceFile": "CMS PY2027 Rate, Plan Attributes, Benefits, Service Area, QHP Landscape and Marketplace geography",
+  "files": {
+    "attrs": {
+      "url": "https://download.cms.gov/marketplace-puf/2027/plan-attributes-puf.zip",
+      "sha256": "c31902e4a441a3aa4515f340a351f26f6bd978043ac7fceb7d4e1c963f3af076"
+    },
+    "service": {
+      "url": "https://download.cms.gov/marketplace-puf/2027/service-area-puf.zip",
+      "sha256": "f2fa35b71fee19b10b4d7804f0a61fd98cddbfd757e2acf5842475af839b2280"
+    },
+    "rate": {
+      "url": "https://download.cms.gov/marketplace-puf/2027/rate-puf.zip",
+      "sha256": "a3a475f24776d32e7a92831d65167ef4751eecd873633bb1d03a97ad7ee7f07a"
+    },
+    "benefits": {
+      "url": "https://download.cms.gov/marketplace-puf/2027/benefits-and-cost-sharing-puf.zip",
+      "sha256": "0d599cd0453079226ca577052e09df9e143df01c90e1178806e40deb952f93a2"
+    },
+    "landscape": {
+      "url": "https://data.healthcare.gov/datafile/py2027/individual_market_medical.zip",
+      "sha256": "74bc775e60d2427b55bda0e9bbd9f5769924042d52f53cff5b3a615269df024f"
+    },
+    "dental": {
+      "url": "https://data.healthcare.gov/datafile/py2027/individual_market_dental.zip",
+      "sha256": "8e606ac50a386c6703654a2322d2bd7e8d33a6a89e1745009684cdaccb375fd2"
+    }
+  },
+  "geography": {
+    "county-zips": {
+      "url": "https://marketplace.api.healthcare.gov/api/v1/data/county-zips?year=2027",
+      "sha256": "2e0415818ddf0b4f671c97801b7f1be076ecb041530f793250bde5271e7f722d",
+      "publicUrl": "https://marketplace-int.api.healthcare.gov/api/v1/data/county-zips?year=2027",
+      "canonicalSha256": "f2f5475d51beb0757e7eddfedf174f38604a6e2219943f0d03c13bd0b00c3195"
+    },
+    "rate-areas": {
+      "url": "https://marketplace.api.healthcare.gov/api/v1/data/rate-areas?year=2027",
+      "sha256": "fe570994473a0b5bdc631209171faf0570af1c241aaacffb63a9bd9cae4a966e",
+      "publicUrl": "https://marketplace-int.api.healthcare.gov/api/v1/data/rate-areas?year=2027",
+      "canonicalSha256": "81639dda49b1c8d63f2c8c33b8e4d26b8c1f0baa06ddef9abdf746fd163ceb65"
+    }
+  },
+  "minimumCounties": 1900,
+  "minimumSourceShare": 0.95,
+  "coverage": {
+    "sourceCountyCount": 2019,
+    "countiesBuilt": 2019,
+    "reachableCounties": 2019,
+    "pricedZipCountyPairs": 31816,
+    "pricedZips": 21836,
+    "crosswalkZips": 40946,
+    "crosswalkPairs": 56275
+  }
+}

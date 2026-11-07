@@ -1,0 +1,2 @@
+# Keep the content-versioned calculator bytes identical in every checkout.
+public/app.js text eol=lf

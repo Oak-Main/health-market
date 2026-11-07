@@ -1,0 +1,37 @@
+name: Windows asset integrity
+
+on:
+  pull_request:
+    paths:
+      - .gitattributes
+      - public/app.js
+      - public/index.html
+      - test/asset-line-endings.test.ts
+      - package.json
+      - package-lock.json
+      - .github/workflows/asset-hash-windows.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Windows checkout
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Exercise CRLF checkout and existing-worktree refresh
+        shell: pwsh
+        run: |
+          git config --local core.autocrlf true
+          git config --local core.eol crlf
+          git checkout-index --all --force
+          node --input-type=module -e "import { readFileSync, writeFileSync } from 'node:fs'; const path = 'public/app.js'; writeFileSync(path, readFileSync(path, 'utf8').replace(/\r?\n/g, '\r\n'));"
+          git checkout-index --force -- public/app.js
+      - run: npm ci
+      - run: npm test

@@ -53,6 +53,15 @@ DNS is created automatically because the zone is already in the same Cloudflare
 account. `public/_redirects` collapses `www` onto the apex with a 301, so search
 engines see one canonical origin.
 
+## Calculator asset line endings
+
+`public/app.js` is pinned to LF by `.gitattributes`, including checkouts with
+`core.autocrlf=true`. Its homepage version and publication verification hash the
+actual file content; changing JavaScript still requires updating the version.
+After pulling this attribute into an existing CRLF checkout, save any local edits
+to `public/app.js` first, then run `git checkout-index --force -- public/app.js`
+to refresh it from the index with LF endings. This command overwrites that file.
+
 ## Why the ETL runs in CI rather than being committed
 
 GitHub runners have the outbound access to CMS that the authoring environment lacked.

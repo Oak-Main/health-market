@@ -5,3 +5,7 @@ https://www.subsidydropoff.com/* https://subsidydropoff.com/:splat 301!
 # Friendly aliases for the tool.
 /calculator /plan 301
 /cliff /plan 301
+
+# /plan is the calculator shell. Keep this route when 404.html disables SPA fallback.
+/plan / 200
+/plan/ / 200

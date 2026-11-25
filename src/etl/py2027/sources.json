@@ -1,32 +1,32 @@
 {
   "planYear": 2027,
   "ratePublished": "2026-10-28",
-  "verifiedAt": "2026-11-06",
+  "verifiedAt": "2026-11-25",
   "sourceFile": "CMS PY2027 Rate, Plan Attributes, Benefits, Service Area, QHP Landscape and Marketplace geography",
   "files": {
     "attrs": {
       "url": "https://download.cms.gov/marketplace-puf/2027/plan-attributes-puf.zip",
-      "sha256": "c31902e4a441a3aa4515f340a351f26f6bd978043ac7fceb7d4e1c963f3af076"
+      "sha256": "da725e0c17b04ee5571645e37700ac207cc72adb21a707f792fef5cb6c2c577e"
     },
     "service": {
       "url": "https://download.cms.gov/marketplace-puf/2027/service-area-puf.zip",
-      "sha256": "f2fa35b71fee19b10b4d7804f0a61fd98cddbfd757e2acf5842475af839b2280"
+      "sha256": "3554e42698cda11b6366dfef0ddd0caee750452799a4be55f647bd22b4ce6c64"
     },
     "rate": {
       "url": "https://download.cms.gov/marketplace-puf/2027/rate-puf.zip",
-      "sha256": "a3a475f24776d32e7a92831d65167ef4751eecd873633bb1d03a97ad7ee7f07a"
+      "sha256": "6cafc8a8d2b8429fd5bc300bada96a076bc4acb640cf3dd1e4676da62cbad1b0"
     },
     "benefits": {
       "url": "https://download.cms.gov/marketplace-puf/2027/benefits-and-cost-sharing-puf.zip",
-      "sha256": "0d599cd0453079226ca577052e09df9e143df01c90e1178806e40deb952f93a2"
+      "sha256": "e4efb4a2c009fa9ad27cf0b2aaecdb9f61c394204b9c2fe1e47fd573d9207d5f"
     },
     "landscape": {
       "url": "https://data.healthcare.gov/datafile/py2027/individual_market_medical.zip",
-      "sha256": "74bc775e60d2427b55bda0e9bbd9f5769924042d52f53cff5b3a615269df024f"
+      "sha256": "f36cc067222efd694f54ea206946da95429edc1dfc786078777dc4e975caba6b"
     },
     "dental": {
       "url": "https://data.healthcare.gov/datafile/py2027/individual_market_dental.zip",
-      "sha256": "8e606ac50a386c6703654a2322d2bd7e8d33a6a89e1745009684cdaccb375fd2"
+      "sha256": "d6c7a3cc70f798cdfeef28faa4a9daac5dd55d8a0d0bab606dcf1c44129d1207"
     }
   },
   "geography": {
@@ -40,7 +40,7 @@
       "url": "https://marketplace.api.healthcare.gov/api/v1/data/rate-areas?year=2027",
       "publicUrl": "https://marketplace-int.api.healthcare.gov/api/v1/data/rate-areas?year=2027",
       "canonicalSha256": "81639dda49b1c8d63f2c8c33b8e4d26b8c1f0baa06ddef9abdf746fd163ceb65",
-      "observedFileSha256": "fe570994473a0b5bdc631209171faf0570af1c241aaacffb63a9bd9cae4a966e"
+      "observedFileSha256": "d80ab55b8e00eb9b73667db965f61b1af2e9cdd8056068baacfad90a229f30ee"
     }
   },
   "minimumCounties": 1900,
